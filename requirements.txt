@@ -9,3 +9,4 @@ pandas>=2.2.0
 python-dotenv>=1.0.0
 anthropic>=0.94.1
 rapidfuzz>=3.0.0
+scholarly>=1.7

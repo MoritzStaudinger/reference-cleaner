@@ -20,7 +20,7 @@ import html as _html
 from datetime import date
 from typing import Any
 
-_VALIDATION_SOURCES = ("semantic_scholar", "acl_anthology", "dblp", "openalex")
+_VALIDATION_SOURCES = ("semantic_scholar", "acl_anthology", "dblp", "openalex", "crossref", "openlibrary", "scholarly", "arxiv")
 
 
 # ---------------------------------------------------------------------------
@@ -39,10 +39,6 @@ def _overall_status(lr: dict | None) -> str:
     if not found:
         return "missing"
     if "match" in labels:
-        match_results = [r for r in found if r.get("label") == "match"]
-        venue_labels  = [r.get("venue_label") for r in match_results if r.get("venue_label")]
-        if venue_labels and all(vl == "mismatch" for vl in venue_labels):
-            return "mismatch"
         return "match"
     if "fuzzy" in labels:
         return "missing"
@@ -202,7 +198,7 @@ def generate_report(
     lines.append(f"| ❌ Major errors (wrong paper cited) | {n_major} |")
     lines.append(f"| ⚠️ Moderate errors (wrong DOI) | {n_mod} |")
     lines.append(f"| 🟡 Minor concerns (venue mismatch) | {n_venue} |")
-    lines.append(f"| 🔍 Not found / unverifiable | {n_missing} |\n")
+    lines.append(f"| 🟡 Did not find in databases | {n_missing} |\n")
     lines.append(f"**Overall quality:** {quality}\n")
 
     # Narrative
@@ -225,8 +221,8 @@ def generate_report(
         )
     if n_missing:
         lines.append(
-            f"> 🔍 **{n_missing} reference{'s' if n_missing > 1 else ''} could not be verified** "
-            "in Semantic Scholar, DBLP, OpenAlex, or ACL Anthology. "
+            f"> 🟡 **{n_missing} reference{'s' if n_missing > 1 else ''} could not be located in any database** "
+            "in Semantic Scholar, DBLP, OpenAlex, Crossref, or Open Library. "
             "This is normal for books, theses, and very recent preprints, "
             "but warrants a manual check if the reference is a conference or journal paper.\n"
         )
@@ -307,7 +303,7 @@ def generate_report(
     # --- Not found ---
     if not_found:
         lines.append("---\n")
-        lines.append("## 🔍 Not Found / Unverifiable\n")
+        lines.append("## 🟡 Did Not Find in Databases\n")
         lines.append(
             "These references could not be matched in any of the queried databases. "
             "Books, dissertations, technical reports, and very recent preprints are "
@@ -341,4 +337,242 @@ def generate_report(
             lines.append(f"- **[{n}]** {entry}" + (f" ({meta})" if meta else ""))
         lines.append("")
 
+    # --- Detailed per-reference audit ---
+    lines.append("---\n")
+    lines.append("## 🔎 Detailed Per-Reference Audit\n")
+    lines.append(
+        "One card per reference: extracted fields, the conclusion the "
+        "pipeline reached, and what each consulted source returned.\n"
+    )
+    for i, (ref, lr) in enumerate(zip(refs, lookup_results)):
+        lines.append(_per_ref_audit(i + 1, ref, lr))
+
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Per-reference audit card
+# ---------------------------------------------------------------------------
+
+_SOURCE_LABELS: list[tuple[str, str]] = [
+    ("semantic_scholar", "Semantic Scholar"),
+    ("crossref",         "Crossref"),
+    ("openalex",         "OpenAlex"),
+    ("acl_anthology",    "ACL Anthology"),
+    ("dblp",             "DBLP"),
+    ("arxiv",            "arXiv"),
+    ("openlibrary",      "Open Library"),
+    ("scholarly",        "Google Scholar"),
+]
+
+_STATUS_ICONS = {
+    "found":            "✅",
+    "not_found":        "❓",
+    "error":            "⚠️",
+    "skipped":          "—",
+    "not_in_anthology": "—",
+    "no_index":         "—",
+}
+
+_LABEL_ICONS = {
+    "match":    "✅",
+    "fuzzy":    "🟡",
+    "mismatch": "❌",
+}
+
+
+def _pct(x: float | None) -> str:
+    return f"{x:.0%}" if isinstance(x, (int, float)) else "—"
+
+
+def _conclusion(ref: dict, lr: dict) -> tuple[str, str, str]:
+    """Return (icon, headline, explanation) for the overall verdict."""
+    status   = _overall_status(lr)
+    best     = _best_found(lr)
+    wrong    = _has_wrong_doi(lr)
+    found_in = [
+        name
+        for src, name in _SOURCE_LABELS
+        if lr.get(src, {}).get("status") == "found"
+        and lr.get(src, {}).get("label") == "match"
+    ]
+
+    if status == "match" and wrong:
+        # Title matches a real paper somewhere, but the DOI in the ref points
+        # to a different one — copy-paste smell.
+        return (
+            "⚠️",
+            "Wrong DOI",
+            f"Title matches a real paper, but the DOI `{wrong}` resolves to a "
+            f"different paper on Semantic Scholar. The DOI may have been "
+            f"copy-pasted from a neighbouring reference.",
+        )
+    if status == "match":
+        if found_in:
+            return (
+                "✅",
+                "Verified",
+                f"Title confirmed in {', '.join(found_in)}.",
+            )
+        return ("✅", "Verified", "Title confirmed by at least one source.")
+
+    if status == "mismatch":
+        if best:
+            ft  = best.get("found_title") or ""
+            sim = best.get("similarity")
+            return (
+                "❌",
+                "Wrong paper cited",
+                f"A paper was found in the databases but its title "
+                f'(*"{ft}"*, {_pct(sim)} similar) is too far from the cited '
+                f"title to be the same paper. The citation likely points to a "
+                f"different paper than what the bibliographic data identifies.",
+            )
+        return ("❌", "Wrong paper cited", "Closest database match does not align with the cited title.")
+
+    # status == "missing"
+    queried = [
+        name
+        for src, name in _SOURCE_LABELS
+        if lr.get(src, {}).get("status") in ("found", "not_found", "error")
+    ]
+    errored = [
+        name
+        for src, name in _SOURCE_LABELS
+        if lr.get(src, {}).get("status") == "error"
+    ]
+    if lr.get("_router_path") == "junk_filter":
+        if ref.get("_corruption") == "name_fragment_title":
+            return (
+                "🚫",
+                "Parser corruption (needs LLM repair)",
+                "The regex parser put a fragment of the author list into the "
+                "title field (e.g. \"Li, P\"). The real title is somewhere "
+                "in the raw text but only LLM repair can recover it. Excluded "
+                "from the match-rate denominator until LLM repair is enabled.",
+            )
+        if ref.get("_not_a_citation"):
+            return (
+                "🚫",
+                "Not a citation",
+                "The LLM classifier flagged this as body text, an equation, "
+                "or a caption that the PDF parser misidentified as a "
+                "bibliography entry. Excluded from the match-rate denominator.",
+            )
+        return (
+            "🚫",
+            "Skipped (parser garbage)",
+            "The extracted fields were too damaged for a meaningful lookup "
+            "(e.g. year token as title, missing authors). Re-parse with a "
+            "different backend or enable LLM repair to recover this ref.",
+        )
+    if errored and not queried:
+        return (
+            "⚠️",
+            "Lookup failed",
+            f"All sources returned errors ({', '.join(errored)}). Try again "
+            f"after the rate limit window or check network connectivity.",
+        )
+    if queried:
+        return (
+            "🟡",
+            "Did not find this reference",
+            f"We searched all {len(queried)} indexed sources "
+            f"({', '.join(queried)}) and couldn't locate this paper. "
+            f"That does **not** necessarily mean the citation is wrong — "
+            f"common reasons a real reference lands here: "
+            f"blog-style publications (Transformer Circuits Thread, Distill, "
+            f"company tech reports), books or theses not in academic DBs, "
+            f"very recent preprints, niche workshop papers, or a garbled "
+            f"extraction we couldn't repair. Verify manually if it's important.",
+        )
+    return ("❓", "Pending", "No lookup has run for this reference yet.")
+
+
+def _per_ref_audit(n: int, ref: dict, lr: dict | None) -> str:
+    title = ref.get("title") or "(no title extracted)"
+    page  = ref.get("page")
+    loc   = f" · p. {page}" if page else ""
+
+    icon, headline, explanation = _conclusion(ref, lr or {})
+
+    out: list[str] = []
+    out.append(f"### {icon} [{n}] {title}{loc}\n")
+    raw = (ref.get("raw") or "").strip()
+    if raw:
+        out.append(f"> {raw}\n")
+
+    # Extracted fields table
+    field_rows = []
+    for field, label in [
+        ("authors", "Authors"),
+        ("year",    "Year"),
+        ("venue",   "Venue"),
+        ("doi",     "DOI"),
+        ("url",     "URL"),
+    ]:
+        val = (ref.get(field) or "").strip()
+        if val:
+            display = f"`{val}`" if field in ("doi", "url") else val
+            field_rows.append(f"| {label} | {display} |")
+    if field_rows:
+        out.append("**Extracted fields**\n")
+        out.append("| Field | Value |")
+        out.append("|---|---|")
+        out.extend(field_rows)
+        out.append("")
+    else:
+        out.append("**Extracted fields:** _(none recovered from raw)_\n")
+
+    out.append(f"**Conclusion:** {icon} **{headline}** — {explanation}\n")
+
+    # Per-source table — skip rows that just say "skipped" so the verdict
+    # block stays focused on sources that actually returned a signal.
+    lr = lr or {}
+    interesting = ("found", "not_found", "error")
+    rows: list[str] = []
+    for src, label in _SOURCE_LABELS:
+        r = lr.get(src) or {}
+        status = r.get("status", "absent")
+        if status not in interesting:
+            continue
+        icon_s = _STATUS_ICONS.get(status, "·")
+        sim    = _pct(r.get("similarity"))
+        asim   = _pct(r.get("authors_sim"))
+        vsim   = r.get("venue_sim")
+        vlbl   = r.get("venue_label", "")
+        if r.get("found_venue"):
+            vcell = r["found_venue"]
+            if vlbl in ("fuzzy", "mismatch") and vsim is not None:
+                vcell += f" ({vsim:.0%}, {vlbl})"
+        else:
+            vcell = "—"
+
+        if status == "found":
+            mlbl = r.get("label")
+            mark = _LABEL_ICONS.get(mlbl, "")
+            ft   = r.get("found_title") or ""
+            url  = r.get("url") or ""
+            result_cell = f"{mark} [{ft}]({url})" if url and ft else (ft or "(found)")
+        elif status == "not_found":
+            result_cell = "not found"
+        else:   # error
+            err = (r.get("error") or "")[:80].replace("|", "\\|")
+            result_cell = f"error: `{err}`"
+
+        rows.append(f"| {label} | {icon_s} {status} | {sim} | {asim} | {vcell} | {result_cell} |")
+
+    if rows:
+        out.append("**Sources consulted**\n")
+        out.append("| Source | Status | Title sim | Author sim | Venue | Result |")
+        out.append("|---|:-:|:-:|:-:|---|---|")
+        out.extend(rows)
+        out.append("")
+    else:
+        out.append("**Sources consulted:** _(none — all sources skipped)_\n")
+
+    route = lr.get("_router_path")
+    if route:
+        out.append(f"<sub>Routing path: `{route}`</sub>\n")
+
+    return "\n".join(out)

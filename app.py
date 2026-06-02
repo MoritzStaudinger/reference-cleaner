@@ -11,6 +11,7 @@ from parsers import (
     extract_references_docling,
     extract_references_pymupdf4llm,
     extract_references_grobid,
+    extract_references_hybrid,
     grobid_is_available,
 )
 from highlighter import highlight_references
@@ -97,16 +98,29 @@ st.caption("Upload a PDF to extract and validate its references.")
 # Sidebar
 # ---------------------------------------------------------------------------
 _ANTHROPIC_KEY_PRESENT = bool(os.getenv("ANTHROPIC_API_KEY"))
+_AQUEDUCT_KEY_PRESENT  = bool(os.getenv("AQUEDUCT_API_KEY"))
+_LLM_KEY_PRESENT       = _ANTHROPIC_KEY_PRESENT or _AQUEDUCT_KEY_PRESENT
+_LLM_BACKEND           = (os.getenv("LLM_BACKEND") or
+                          ("aqueduct" if _AQUEDUCT_KEY_PRESENT else "anthropic")).lower()
+_LLM_MODEL             = os.getenv("LLM_MODEL") or (
+    "qwen-3.6-35b" if _LLM_BACKEND == "aqueduct" else "claude-haiku-4-5"
+)
 _GROBID_AVAILABLE = grobid_is_available()
 
 _PARSER_OPTIONS = ["pymupdf4llm", "docling"]
 _PARSER_HELP = {
-    "pymupdf4llm": "Fast (~1 s). Good for standard PDFs.",
-    "docling":     "Slow (minutes). Better for complex layouts.",
-    "grobid":      "Requires GROBID service (docker compose up).",
+    "hybrid":      "Best quality (recommended). Merges GROBID's full-doc parse "
+                   "with pymupdf-located section refs structured by GROBID's "
+                   "/api/processCitationList — catches refs each method misses alone.",
+    "grobid":      "GROBID full-doc layout parse only. Fast, clean, may miss "
+                   "refs in oddly-formatted bibliographies.",
+    "pymupdf4llm": "Fastest (~1 s). Regex-based field extraction; brittle on "
+                   "complex bibliographies — body text can leak in.",
+    "docling":     "Slow (minutes). Same regex extractor as pymupdf4llm but "
+                   "better layout analysis on some PDFs.",
 }
 if _GROBID_AVAILABLE:
-    _PARSER_OPTIONS.insert(0, "grobid")
+    _PARSER_OPTIONS = ["hybrid", "grobid"] + _PARSER_OPTIONS
 
 with st.sidebar:
     st.header("Settings")
@@ -117,15 +131,23 @@ with st.sidebar:
         help=" | ".join(f"**{k}**: {v}" for k, v in _PARSER_HELP.items() if k in _PARSER_OPTIONS),
     )
     if not _GROBID_AVAILABLE:
-        st.caption("💡 Run `docker compose up` for GROBID (best quality).")
+        st.caption("💡 Run `docker compose up -d grobid` to unlock `grobid` / `hybrid`.")
+
+    _llm_label = (
+        f"Enhance with LLM ({_LLM_MODEL} via {_LLM_BACKEND})"
+        if _LLM_KEY_PRESENT
+        else "Enhance with LLM (no key set)"
+    )
     use_llm = st.checkbox(
-        "Enhance with Claude (LLM)",
-        value=_ANTHROPIC_KEY_PRESENT,
-        disabled=not _ANTHROPIC_KEY_PRESENT,
+        _llm_label,
+        value=_LLM_KEY_PRESENT,
+        disabled=not _LLM_KEY_PRESENT,
         help=(
-            "Use Claude Haiku to improve title/author extraction."
-            if _ANTHROPIC_KEY_PRESENT
-            else "Set ANTHROPIC_API_KEY in .env to enable."
+            f"Repairs garbled fields and flags body-text refs.  Backend is "
+            f"controlled by env vars LLM_BACKEND / LLM_MODEL. Active: "
+            f"**{_LLM_BACKEND}** / **{_LLM_MODEL}**."
+            if _LLM_KEY_PRESENT
+            else "Set ANTHROPIC_API_KEY (paid) or AQUEDUCT_API_KEY (free) in .env."
         ),
     )
     show_debug = st.checkbox("Show raw markdown (debug)", value=False)
@@ -150,19 +172,27 @@ def run_parser(pdf_bytes: bytes, parser: str):
         tmp.write(pdf_bytes)
         tmp_path = tmp.name
     try:
+        if parser == "hybrid":
+            return extract_references_hybrid(tmp_path, return_markdown=True)
         if parser == "docling":
             return extract_references_docling(tmp_path, return_markdown=True)
-        elif parser == "grobid":
+        if parser == "grobid":
             return extract_references_grobid(tmp_path, return_markdown=True)
-        else:
-            return extract_references_pymupdf4llm(tmp_path, return_markdown=True)
+        return extract_references_pymupdf4llm(tmp_path, return_markdown=True)
     finally:
         os.unlink(tmp_path)
 
 
 @st.cache_data(show_spinner=False)
-def run_llm_enhancement(refs_json: str) -> str:
-    """Run LLM field extraction on parsed references. Returns enhanced refs as JSON."""
+def run_llm_enhancement(refs_json: str, backend: str, model: str) -> str:
+    """
+    Run LLM field extraction on parsed references. Returns enhanced refs as JSON.
+
+    ``backend`` and ``model`` are folded into the cache key so switching LLM
+    providers (or topping up credits after a failed run) automatically
+    re-triggers extraction instead of serving stale enhanced refs.
+    """
+    _ = (backend, model)   # part of cache key, not used inside
     from llm_parser import parse_references_with_llm
     refs = json.loads(refs_json)
     enhanced = parse_references_with_llm(refs)
@@ -193,8 +223,8 @@ if not references:
     st.stop()
 
 if use_llm:
-    with st.spinner("Enhancing field extraction with Claude …"):
-        refs_json = run_llm_enhancement(json.dumps(references))
+    with st.spinner(f"Enhancing field extraction with {_LLM_MODEL} ({_LLM_BACKEND}) …"):
+        refs_json = run_llm_enhancement(json.dumps(references), _LLM_BACKEND, _LLM_MODEL)
         references = json.loads(refs_json)
 
 with st.spinner("Locating references in PDF and adding highlights …"):
@@ -216,7 +246,7 @@ if "selected_ref" not in st.session_state:
 # Helpers
 # ---------------------------------------------------------------------------
 
-_VALIDATION_SOURCES = ("semantic_scholar", "acl_anthology", "dblp", "openalex")
+_VALIDATION_SOURCES = ("semantic_scholar", "acl_anthology", "dblp", "openalex", "crossref", "openlibrary", "scholarly", "arxiv")
 
 
 def _overall_status(lr: dict | None) -> str:
@@ -240,12 +270,7 @@ def _overall_status(lr: dict | None) -> str:
     if not found:
         return "missing"
     if "match" in labels:
-        # Check if the best match also has a clear venue mismatch
-        match_results = [r for r in found if r.get("label") == "match"]
-        venue_labels  = [r.get("venue_label") for r in match_results if r.get("venue_label")]
-        if venue_labels and all(vl == "mismatch" for vl in venue_labels):
-            return "mismatch"
-        return "match"
+        return "match"   # composite label already accounts for venue + authors
     if "fuzzy" in labels:
         return "missing"   # uncertain → yellow
     return "mismatch"      # all found results are clearly wrong
@@ -263,6 +288,10 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
         ("ACL Anthology",    "acl_anthology"),
         ("DBLP",             "dblp"),
         ("OpenAlex",         "openalex"),
+        ("Crossref",         "crossref"),
+        ("arXiv",            "arxiv"),
+        ("Open Library",     "openlibrary"),
+        ("Google Scholar",   "scholarly"),
     ]:
         r = lr.get(key, {})
         status = r.get("status", "")
@@ -272,7 +301,9 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
             rows.append(f"<li>❓ <b>{label}</b>: not found</li>")
             continue
         if status == "error":
-            rows.append(f"<li>⚠️ <b>{label}</b>: error</li>")
+            err = _html.escape(str(r.get("error", ""))[:120])
+            detail = f" — <code>{err}</code>" if err else ""
+            rows.append(f"<li>⚠️ <b>{label}</b>: error{detail}</li>")
             continue
 
         # Title
@@ -303,22 +334,17 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
                 + "</li>"
             )
 
-    # --- Identifier sources ---
-    arxiv_r = lr.get("arxiv", {})
-    if arxiv_r.get("status") == "found":
-        url = _html.escape(arxiv_r.get("url", ""))
-        aid = _html.escape(arxiv_r.get("arxiv_id", "arXiv"))
-        rows.append(f'<li>🔗 <b><a href="{url}" target="_blank">arXiv</a></b>: {aid}</li>')
-    elif arxiv_r.get("status") == "error":
-        rows.append("<li>⚠️ <b>arXiv</b>: error</li>")
+    # arXiv is rendered inline in the main validation loop above (it now
+    # title+author-verifies the paper at the cited ID).
 
-    crossref_r = lr.get("crossref", {})
-    if crossref_r.get("status") == "found":
-        url = _html.escape(crossref_r.get("url", ""))
-        doi = _html.escape(crossref_r.get("doi", "DOI"))
-        rows.append(f'<li>🔗 <b><a href="{url}" target="_blank">Crossref</a></b>: {doi}</li>')
-    elif crossref_r.get("status") == "error":
-        rows.append("<li>⚠️ <b>Crossref</b>: error</li>")
+    # Show the reference's own URL as a clickable link when it isn't already
+    # covered by arXiv or a doi.org link shown via validation sources.
+    source_url = lr.get("_source_url", "")
+    if source_url:
+        rows.append(
+            f'<li>🔗 <b><a href="{_html.escape(source_url)}" target="_blank">'
+            f'Source URL</a></b></li>'
+        )
 
     if not rows:
         return ""

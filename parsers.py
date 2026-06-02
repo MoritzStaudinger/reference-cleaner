@@ -180,16 +180,94 @@ def _parse_raw_reference(raw: str) -> dict[str, Any]:
     return ref
 
 
+# Body-text opener patterns — paragraphs from the paper that the PDF parser
+# sometimes grabs as "references".  Conservative list: only fires when one
+# of these patterns is at the very start of `raw`.
+_BODY_TEXT_OPENER = re.compile(
+    r"^(?:we |our |this |these |those |another |similarly|additionally|"
+    r"however|furthermore|moreover|notably|representing |encoding |"
+    r"to encode|to represent|to generalize|using |for example|"
+    r"in particular|notation\b|figure \d|table \d|equation |"
+    r"as shown|as the|consider |suppose |let \w|recall that|"
+    r"vsas? |hrrs? |cot )",
+    re.IGNORECASE,
+)
+
+
+_OPENER_NOISE_RE = re.compile(r"^[\s\-\[\]\*_~`0-9.]+")
+
+
+def _looks_like_body_text(raw: str) -> bool:
+    """
+    Heuristic: does this string look like a paragraph from the paper's body
+    rather than a bibliographic entry?
+
+    Used as a fallback when LLM repair is unavailable.  Conservative — only
+    fires when the opener pattern matches AND the raw has none of the
+    classic citation anchors (year, DOI, URL).
+    """
+    head = _OPENER_NOISE_RE.sub("", raw)
+    if not _BODY_TEXT_OPENER.match(head):
+        return False
+    has_year = bool(re.search(r"\b(?:19|20)\d{2}\b", raw))
+    has_doi  = "10." in raw and "/" in raw
+    has_url  = "http" in raw
+    if has_year or has_doi or has_url:
+        return False
+    return True
+
+
+# Regex parser sometimes drops a name fragment into `title` when the field
+# split mis-fires on comma-separated author lists.  Examples from real PDFs:
+# "Li, P", "Saha, S", "Kabatiansky and V.I", "Zhang, and H".  These are
+# unrecoverable without LLM repair; flag them so they're excluded from the
+# match-rate denominator instead of poisoning it.
+_NAME_FRAGMENT_TITLE_RE = re.compile(
+    r"^(?:[A-Z][a-zA-Z\-']+(?:,\s*[A-Z]\.?)+|"           # "Li, P" / "Smith, J., K."
+    r"[A-Z][a-zA-Z\-']+\s+and\s+[A-Z]\.?[A-Z]?\.?|"      # "Kabatiansky and V.I"
+    r"[A-Z][a-zA-Z\-']+,\s*and\s+[A-Z]\.?)$"             # "Zhang, and H"
+)
+
+
+def _looks_like_name_fragment_title(title: str) -> bool:
+    """True if `title` is almost certainly a leaked author fragment."""
+    if not title:
+        return False
+    t = title.strip().rstrip(".,;:")
+    if len(t.split()) > 4:
+        return False
+    return bool(_NAME_FRAGMENT_TITLE_RE.match(t))
+
+
 def _is_plausible_reference(ref: dict[str, Any]) -> bool:
-    """Filter out obvious noise: too short, no year, no recognisable structure."""
+    """Filter out obvious noise: too short, body-text paragraphs, no anchors."""
     raw = ref.get("raw", "")
     if len(raw) < 30:
         return False
-    # Must contain a plausible year or at least some typical reference punctuation
-    if not ref.get("year") and not ref.get("doi") and not ref.get("url"):
-        # Require at least a comma and a period to look like a citation
-        if "," not in raw or "." not in raw:
-            return False
+    if _looks_like_body_text(raw):
+        return False
+    if _looks_like_name_fragment_title(ref.get("title", "")):
+        # Real ref but with a corrupted title field; mark so lookup skips
+        # AND it's excluded from the match-rate denominator.
+        ref["_not_a_citation"] = True
+        ref["_corruption"] = "name_fragment_title"
+        return True   # keep for visibility in the report
+
+    # Backfill year from raw if GROBID didn't structure it.
+    year_in_raw = re.search(r"\b(?:19|20)\d{2}\b", raw)
+    if year_in_raw and not ref.get("year"):
+        ref["year"] = year_in_raw.group(0)
+
+    # A reference needs at least one anchor: an explicit year/doi/url field,
+    # OR a year in the raw text, OR a comma+period combo (typical citation
+    # punctuation).  Without any of these, it's probably noise.
+    has_anchor = (
+        ref.get("year") or ref.get("doi") or ref.get("url")
+        or year_in_raw
+        or ("," in raw and "." in raw)
+    )
+    if not has_anchor:
+        return False
     return True
 
 
@@ -301,7 +379,11 @@ def _parse_tei_references(tei_xml: str) -> list[dict[str, Any]]:
             if m:
                 ref["year"] = m.group(0)
 
-        # Venue — journal title preferred over series/book title
+        # Venue — journal title preferred over series/book title.  For a
+        # standalone preprint, GROBID stores the title in monogr/title[level='m']
+        # AND that's the only "venue-like" element — we'd otherwise duplicate
+        # the title into venue.  Skip when venue text equals title.
+        title_text = (ref.get("title") or "").strip()
         for xpath in (
             "tei:monogr/tei:title[@level='j']",   # journal
             "tei:monogr/tei:title[@level='m']",   # book / proceedings
@@ -309,8 +391,10 @@ def _parse_tei_references(tei_xml: str) -> list[dict[str, Any]]:
         ):
             el = bib.find(xpath, _TEI_NS)
             if el is not None and el.text:
-                ref["venue"] = el.text.strip()
-                break
+                venue_text = el.text.strip()
+                if venue_text and venue_text != title_text:
+                    ref["venue"] = venue_text
+                    break
 
         # DOI
         doi_el = bib.find("tei:idno[@type='DOI']", _TEI_NS)
@@ -364,3 +448,271 @@ def extract_references_grobid(
     if return_markdown:
         return filtered, tei_xml
     return filtered
+
+
+# ---------------------------------------------------------------------------
+# Hybrid backend — pymupdf isolates the References section, GROBID structures
+# the individual citation strings via /api/processCitationList
+# ---------------------------------------------------------------------------
+
+# Patterns that mark the END of the References section (start of appendix etc).
+_REF_SECTION_END_RE = re.compile(
+    r"\n\s*(?:"
+    r"#{1,6}\s*"                                      # markdown heading
+    r"(?:A(?:ppendix)?\b|Supplementary|Limitations?|Ethics?|"
+    r"Broader\s+Impact|Acknowledg|Author\s+Contributions)|"
+    r"[A-Z]\.?\s+(?:Appendix|Supplementary|Limitations?|Ethics?)|"
+    r"\*{0,2}A(?:ppendix)?\s+(?:[A-Z]|\d)|"           # "*A. Implementation*"
+    r"\d+\s+Appendix"
+    r")",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def _trim_to_section_end(section_text: str) -> str:
+    """Return the prefix of *section_text* before the next major section heading."""
+    m = _REF_SECTION_END_RE.search(section_text)
+    return section_text[: m.start()] if m else section_text
+
+
+def _looks_like_ref_candidate(raw: str) -> bool:
+    """Quick filter: must look like a citation, not body text from an appendix."""
+    if len(raw) < 30:
+        return False
+    if _looks_like_body_text(raw):
+        return False
+    # Needs a 4-digit year — every modern citation has one
+    if not re.search(r"\b(?:19|20)\d{2}\b", raw):
+        return False
+    return True
+
+
+def _grobid_process_citation_list(citations: list[str]) -> list[dict[str, Any]]:
+    """Structure raw citation strings via GROBID's /api/processCitationList."""
+    if not citations:
+        return []
+    # form-encoded with repeated `citations` parameter; ask for TEI XML
+    payload = [("citations", c) for c in citations]
+    response = _requests.post(
+        f"{GROBID_URL}/api/processCitationList",
+        data=payload,
+        headers={"Accept": "application/xml"},
+        timeout=120,
+    )
+    response.raise_for_status()
+    tei = response.text
+    refs = _parse_tei_references(tei)
+    # processCitationList preserves input order.  Force raw to the input
+    # string — GROBID sometimes reconstructs a partial raw from its structured
+    # fields, losing the arXiv ID / "preprint arXiv:NNNN.NNNN" suffix that
+    # `_extract_arxiv_id` relies on for the arXiv batch prewarm.
+    for r, c in zip(refs, citations):
+        r["raw"] = c
+    return refs
+
+
+def _split_plaintext_bibliography(section: str) -> list[str]:
+    """
+    Split a PDF-extracted plain-text references section into individual ref
+    strings.  The native PyMuPDF text retains every hard-wrap newline and
+    has no blank lines between refs, so neither numbered-marker nor
+    blank-line splitters work.
+
+    Strategy: anchor on each YYYY. (publication year) — there's exactly one
+    per ref.  Between two consecutive years, the LAST `". [A-Z]"` is the
+    boundary where ref-N's venue ends and ref-(N+1)'s authors begin.  All
+    earlier `". [A-Z]"` candidates in that span are typically inside the
+    title or venue (subtitles, "vol. N", "arXiv:NNNN.").
+    """
+    # Un-hyphenate: word- continued on next line
+    text = re.sub(r"-\s*\n\s*", "", section)
+    # Drop page footers (a line that is just digits, often a page number)
+    text = re.sub(r"\n\s*\d{1,5}\s*\n", "\n", text)
+    # Collapse all whitespace
+    text = re.sub(r"\s+", " ", text).strip()
+    if not text:
+        return []
+
+    year_positions = [m.end() for m in re.finditer(r"\b(?:19|20)\d{2}\.", text)]
+    if len(year_positions) < 2:
+        return [text] if len(text) >= 30 else []
+
+    boundaries: list[int] = [0]
+    for i in range(len(year_positions) - 1):
+        # Search the span between this year and the next for the boundary
+        span_start = year_positions[i]
+        span_end   = year_positions[i + 1]
+        span       = text[span_start:span_end]
+        # Find ALL ". X" with X a capital starting a name-like token.  We
+        # want the LAST one — that's where the next ref's authors begin.
+        # Tighten the lookahead so we don't fire on ". The" (title words):
+        # an author start is typically followed by lowercase letters (a
+        # name continues), comma, period (initial), or "and".
+        # Negative lookbehind `(?<![\s.][A-Z])` prevents matching where the
+        # period is part of an initial token — either a lone initial
+        # (" Q." → space + capital) or chained initials ("G.A." → period +
+        # capital).  Without this we'd split between an initial and its
+        # surname (e.g. ". Wang" instead of "Q. Wang. 2023.").
+        # We still need to allow legitimate splits after an all-caps
+        # acronym like "OpenAI." — there the I is preceded by another
+        # capital (not [\s.]), so the lookbehind correctly allows the split.
+        cand = list(re.finditer(
+            r"(?<![\s.][A-Z])\.\s(?=[A-Z](?:[a-z]+|\.|\s+(?:and|\d+\s+others)))",
+            span,
+        ))
+        if not cand:
+            continue
+        last = cand[-1]
+        # boundary is just AFTER the ". " preceding the new ref's first author
+        boundaries.append(span_start + last.end())
+    boundaries.append(len(text))
+
+    refs: list[str] = []
+    for i in range(len(boundaries) - 1):
+        chunk = text[boundaries[i] : boundaries[i + 1]].strip()
+        if len(chunk) >= 30:
+            refs.append(chunk)
+    return refs
+
+
+def _extract_via_section_pipeline(pdf_path: str) -> list[dict[str, Any]]:
+    """
+    Slice the References section out of the PDF's raw text (via PyMuPDF
+    direct text extraction — no OCR, no markdown), split it into candidate
+    citation strings, and have GROBID's /api/processCitationList structure
+    each one.  Returns [] if the section can't be located or no candidate
+    looks like a citation.
+
+    We use raw `page.get_text()` instead of `pymupdf4llm.to_markdown` because
+    pymupdf4llm/PyMuPDF auto-triggers Tesseract OCR on appendix pages with
+    figures/equations, adding 10-30 s per page — a 1-3 minute freeze on
+    papers with extensive appendices.
+    """
+    import fitz
+    doc = fitz.open(pdf_path)
+    full_text = "\n".join(page.get_text() for page in doc)
+    doc.close()
+    section = _locate_reference_section(full_text)
+    if not section:
+        return []
+    section = _trim_to_section_end(section)
+    # Try the smart plain-text splitter first; fall back to the bullet/blank-line
+    # splitter for sections that have explicit markers.
+    candidates_raw = _split_plaintext_bibliography(section)
+    if len(candidates_raw) < 3:
+        candidates_raw = _split_into_references(section)
+    candidates = [c for c in candidates_raw if _looks_like_ref_candidate(c)]
+    if not candidates:
+        return []
+    try:
+        refs = _grobid_process_citation_list(candidates)
+    except Exception:
+        return []
+    return [r for r in refs if _is_plausible_reference(r)]
+
+
+def _norm_for_dedup(text: str) -> str:
+    """Lowercase + strip + collapse whitespace + drop punctuation, for fuzzy dedup."""
+    text = re.sub(r"[^\w\s]", " ", text.lower())
+    return " ".join(text.split())
+
+
+def _merge_ref_lists(
+    primary: list[dict[str, Any]],
+    secondary: list[dict[str, Any]],
+    title_threshold: int = 85,
+) -> list[dict[str, Any]]:
+    """
+    Union two ref lists, fuzzy-deduping by title.
+
+    `primary` is kept in full and in order; entries from `secondary` are
+    added only if no `primary` ref already matches their title (fuzzy
+    token_sort_ratio ≥ threshold).  When a secondary entry has no title
+    but `primary` has one of similar raw text, we still drop the dupe.
+    """
+    from rapidfuzz import fuzz as _fuzz
+    primary_titles = [_norm_for_dedup(r.get("title") or "") for r in primary]
+    primary_raws   = [_norm_for_dedup(r.get("raw")   or "") for r in primary]
+
+    merged = list(primary)
+    for s in secondary:
+        st = _norm_for_dedup(s.get("title") or "")
+        sr = _norm_for_dedup(s.get("raw") or "")
+        if not st and not sr:
+            continue
+
+        dup_idx = None
+        for i, (pt, pr) in enumerate(zip(primary_titles, primary_raws)):
+            # Title match is the strong signal
+            if st and pt and _fuzz.token_sort_ratio(st, pt) >= title_threshold:
+                dup_idx = i
+                break
+            # Fallback: high partial overlap on raw text (catches cases
+            # where one source extracted a fragmentary title but the raw
+            # is the same citation)
+            if sr and pr and _fuzz.partial_ratio(sr, pr) >= 90 and min(len(sr), len(pr)) >= 50:
+                dup_idx = i
+                break
+
+        if dup_idx is None:
+            merged.append(s)
+            continue
+
+        # Duplicate: the secondary entry's `raw` came from pymupdf's actual
+        # PDF text, while the primary entry's `raw` may be GROBID's
+        # reconstructed string (initials' periods stripped, "and" dropped).
+        # Prefer the PDF-extracted raw so the highlighter can locate this
+        # ref via strict text search.  Keep primary's structured fields.
+        s_raw = s.get("raw") or ""
+        if s_raw and merged[dup_idx].get("raw") != s_raw:
+            merged[dup_idx] = {**merged[dup_idx], "raw": s_raw}
+    return merged
+
+
+def extract_references_hybrid(
+    pdf_path: str, return_markdown: bool = False
+) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], str]:
+    """
+    Merge two independent extractions, taking the **union of refs**:
+
+      A) GROBID's full-document layout parse — high-precision structure but
+         occasionally drops refs (long author lists, awkward page breaks).
+      B) pymupdf4llm-located References section → GROBID /processCitationList
+         — recovers refs A missed because B sees every line of the section.
+
+    The two lists are merged with `_merge_ref_lists`: every ref from A is
+    kept, refs from B are appended only when fuzzy title (or raw-text)
+    matching shows they're not already present in A.
+
+    This is a strict superset of GROBID-only: paper #60 (where the section
+    pipeline alone collapsed to 1 ref) is unaffected because A=52 is
+    preserved; paper #178 (where A misses 5 refs that B catches) gets
+    those extras back.
+    """
+    # Run GROBID full-doc parse and the pymupdf-section pipeline in
+    # parallel — they share no state and hit different HTTP endpoints.
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        f_grobid  = pool.submit(extract_references_grobid, pdf_path)
+        f_section = pool.submit(_extract_via_section_pipeline, pdf_path)
+        try:
+            grobid_refs = f_grobid.result()
+        except Exception:
+            grobid_refs = []
+        try:
+            section_refs = f_section.result()
+        except Exception:
+            section_refs = []
+
+    merged = _merge_ref_lists(grobid_refs, section_refs)
+    merged = [r for r in merged if _is_plausible_reference(r)]
+
+    if return_markdown:
+        # Best-effort: return the markdown for debugging the section split
+        try:
+            import pymupdf4llm
+            md = pymupdf4llm.to_markdown(pdf_path)
+        except Exception:
+            md = ""
+        return merged, md
+    return merged

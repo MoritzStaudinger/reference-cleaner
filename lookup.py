@@ -177,7 +177,17 @@ def _ascii_fold(text: str) -> str:
     return "".join(c for c in decomposed if unicodedata.category(c) != "Mn")
 
 
-def _normalize(text: str) -> str:
+def _normalize(text: Any) -> str:
+    # Defensive: an upstream parser / API sometimes hands us a list or
+    # dict instead of a string.  Coerce to a single string before any
+    # str-only operations so callers don't crash on "list has no .lower".
+    if not isinstance(text, str):
+        if isinstance(text, list):
+            text = " ".join(t for t in text if isinstance(t, str))
+        elif isinstance(text, dict):
+            text = str(text.get("name") or text.get("title") or "")
+        else:
+            text = str(text or "")
     text = _ascii_fold(text.lower())
     text = re.sub(r"[^\w\s]", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
@@ -234,39 +244,62 @@ def venue_similarity(v1: str, v2: str) -> float:
     )
 
 
+# Words that aren't real surnames but show up at the tail of a free-form
+# author string — placeholder for "we didn't list everyone".  We drop these
+# so they don't poison the Jaccard / coverage author-similarity score.
+_AUTHOR_PLACEHOLDER_TOKENS = {
+    "", "al", "et", "others", "other", "etal", "and",
+    "colleagues", "coauthors", "co", "auth",
+}
+
+
 def _extract_lastnames(authors: str) -> set[str]:
     """
     Extract normalised, ASCII-folded last names from a free-form author string.
 
+    Drops obvious placeholder tokens ("et al.", "and 1 others", "and others")
+    so the resulting set contains only real surnames.
+
     Handles:
-      "J. Smith"          → {smith}
-      "Yan Wang"          → {wang}      (was buggy: previously returned {yan})
-      "Smith, J."         → {smith}     (the " J." sub-part is dropped as noise)
-      "Smith and Jones"   → {smith, jones}
-      "Müller"            → {muller}    (ASCII-folded via _normalize)
+      "J. Smith"              → {smith}
+      "Yan Wang"              → {wang}      (was buggy: previously returned {yan})
+      "Smith, J."             → {smith}     (the " J." sub-part is dropped as noise)
+      "Smith and Jones"       → {smith, jones}
+      "Müller"                → {muller}    (ASCII-folded via _normalize)
+      "Foo and 1 others"      → {foo}       (placeholder dropped)
+      "Foo, Bar et al."       → {foo, bar}  (placeholder dropped)
     """
+    # Remove "et al." in any form before splitting
+    authors = re.sub(r"\bet\.?\s*al\.?", " ", authors, flags=re.IGNORECASE)
+    # Drop standalone digits ("1 others" → "others") so the digit doesn't
+    # become its own "lastname"
+    authors = re.sub(r"\b\d+\b", " ", authors)
+
     parts = re.split(r"[,;]|\band\b", authors, flags=re.IGNORECASE)
     lastnames: set[str] = set()
     for part in parts:
         tokens = part.strip().split()
         if not tokens:
             continue
-        # Multi-token: assume the last token is the family name.  Covers
-        # both "J. Smith" (initial-first) and "Yan Wang" (full First Last).
-        # Single-token: assume it IS a lastname (or noise that won't match
-        # anything anyway).
-        lastnames.add(_normalize(tokens[-1] if len(tokens) >= 2 else tokens[0]))
+        candidate = _normalize(tokens[-1] if len(tokens) >= 2 else tokens[0])
+        if candidate and candidate not in _AUTHOR_PLACEHOLDER_TOKENS:
+            lastnames.add(candidate)
     return lastnames - {""}
 
 
 def author_similarity(a1: str, a2: str) -> float:
     """
-    Fuzzy-Jaccard over normalised, ASCII-folded last names.
+    Author similarity tolerant of truncated lists.
 
-    A lastname in one set matches a lastname in the other when their
-    `fuzz.ratio` is >= 85 — handles Müller/Mueller, Saint-Exupéry vs
-    Saint Exupery, OCR-style one-letter typos, etc.  Each match consumes
-    its pair so duplicates aren't double-counted.
+    Citations frequently truncate author lists with "et al." or "and N
+    others", so the smaller set may genuinely contain a strict subset of
+    the larger set's authors.  Plain Jaccard (intersection / union)
+    would unfairly penalise this: 2 cited names in a 10-author paper
+    scores 2/10 = 0.2 even when ALL cited names match.
+
+    We use coverage-of-smaller when the size ratio is large (≥ 2×),
+    falling back to Jaccard otherwise.  Lastnames are matched fuzzily
+    (`fuzz.ratio` ≥ 85) so Müller/Mueller, OCR typos, etc. still pair.
     """
     if not a1 or not a2:
         return 0.0
@@ -296,6 +329,12 @@ def author_similarity(a1: str, a2: str) -> float:
         if best is not None and best_score >= 0.85:
             consumed.add(best)
             intersection += 1
+
+    # Coverage path: when the larger set is at least 2× the smaller, treat
+    # the smaller as a truncation of the larger.  How much of the cited
+    # (smaller) set actually appears in the found (larger) set?
+    if len(larger) >= 2 * len(smaller):
+        return intersection / len(smaller)
 
     union = len(ln1) + len(ln2) - intersection
     return intersection / union if union else 0.0
@@ -327,6 +366,123 @@ def _venue_label(vsim: float | None, found_venue: str = "") -> str:
     return "mismatch"
 
 
+# Citation venue markers that mean "this is a preprint" — when the
+# cited venue matches, we don't compare against the canonical published
+# venue (which is naturally different) because the user explicitly cited
+# the preprint version.
+_PREPRINT_VENUE_RE = re.compile(
+    r"\b(?:arxiv|preprint|biorxiv|medrxiv|chemrxiv|psyarxiv|techrxiv|"
+    r"ssrn|researchgate|research\s*square|hal\b|osf\.io|ssrn\.com)\b",
+    re.IGNORECASE,
+)
+
+
+def _is_preprint_venue(extracted_venue: str | None) -> bool:
+    return bool(extracted_venue) and bool(_PREPRINT_VENUE_RE.search(extracted_venue))
+
+
+def _refresh_label(result: dict[str, Any]) -> dict[str, Any]:
+    """
+    Recompute the composite label from a result's stored similarity fields.
+    Used as a postprocess hook on cache reads so changes to
+    `_composite_label` take effect without invalidating the cache.
+
+    Note: this only refreshes the LABEL — the similarity scores remain
+    whatever was stored.  For a full recompute (authors_sim and venue_sim)
+    use `refresh_result_against_ref(result, ref)` which can be called from
+    app.py where the original ref data is available.
+    """
+    if not isinstance(result, dict) or result.get("status") != "found":
+        return result
+    tsim = result.get("similarity")
+    asim = result.get("authors_sim")
+    vsim = result.get("venue_sim")
+    if tsim is None:
+        return result
+    new_label = _composite_label(
+        tsim, asim, result.get("found_venue", ""), vsim,
+    )
+    if new_label == result.get("label"):
+        return result
+    return {**result, "label": new_label}
+
+
+def refresh_result_against_ref(
+    result: dict[str, Any],
+    ref: dict[str, Any],
+) -> dict[str, Any]:
+    """
+    Recompute authors_sim, venue_sim, and the composite label using the
+    CURRENT similarity logic against the ref's currently-extracted fields.
+
+    This is the heavyweight refresh — needed when the cached result's
+    sims were computed before a logic change (e.g. before the coverage
+    path in author_similarity).  Called from app.py on each rerun so the
+    user doesn't have to clear the SQLite cache.
+
+    Also honours the preprint exception: if the cited venue is a known
+    preprint marker (arXiv, ResearchGate, HAL, etc.) we don't compare
+    against the canonical published venue — venue_sim is set to None and
+    the venue label becomes "unknown".
+    """
+    if not isinstance(result, dict) or result.get("status") != "found":
+        return result
+    tsim = result.get("similarity")
+    if tsim is None:
+        return result
+
+    extracted_authors = (ref or {}).get("authors", "") or ""
+    extracted_venue   = (ref or {}).get("venue", "") or ""
+    found_authors     = result.get("found_authors", "") or ""
+    found_venue       = result.get("found_venue", "") or ""
+
+    asim = (author_similarity(extracted_authors, found_authors)
+            if (extracted_authors and found_authors) else None)
+
+    if _is_preprint_venue(extracted_venue):
+        vsim = None
+    else:
+        vsim = (venue_similarity(extracted_venue, found_venue)
+                if (extracted_venue and found_venue) else None)
+
+    new_label       = _composite_label(tsim, asim, found_venue, vsim)
+    new_venue_label = _venue_label(vsim, found_venue)
+
+    # Retroactive wrong-arxiv-id detection for cache entries that predate
+    # the flag.  Two guards:
+    #   1. The result was returned via an arxiv-ID route (carries
+    #      `arxiv_id`) and title sim is below the noise floor.
+    #   2. The ID also appears in the citation's *raw* text (so the
+    #      user really cited it).  LLM repair sometimes injects a
+    #      fabricated arxiv URL into `ref["url"]`; without this guard
+    #      we'd accuse the user of a citation error they never made.
+    wrong_arxiv_id = result.get("wrong_arxiv_id")
+    if (not wrong_arxiv_id and not result.get("wrong_doi")
+            and result.get("arxiv_id")
+            and tsim is not None and tsim < 0.50
+            and (ref or {}).get("title")):
+        cited_id = _cited_arxiv_id(ref or {})
+        if cited_id:
+            wrong_arxiv_id = cited_id
+
+    # wrong_doi / wrong_arxiv_id override the composite label — when a
+    # cited identifier resolves to a different paper, that's a stronger
+    # signal than any title-similarity score and must surface as red.
+    if result.get("wrong_doi") or wrong_arxiv_id:
+        new_label = "mismatch"
+
+    out = {
+        **result,
+        "authors_sim": asim,
+        "venue_sim":   vsim,
+        "label":       new_label,
+        "venue_label": new_venue_label,
+    }
+    if wrong_arxiv_id:
+        out["wrong_arxiv_id"] = wrong_arxiv_id
+    return out
+
+
 def _composite_label(
     tsim: float | None,
     asim: float | None,
@@ -334,48 +490,53 @@ def _composite_label(
     vsim: float | None = None,
 ) -> str:
     """
-    Composite match label requiring BOTH title and author agreement.
+    Composite per-source label.
 
-    Green (match) – title ≥ 0.90 AND authors ≥ 0.35
-                    (or title ≥ 0.90 with no author data available)
-                    OR title ∈ [0.70, 0.90) AND authors ≥ 0.35
-    Fuzzy        – any one signal confirms but the other doesn't
-    Red          – title < 0.70 AND no author rescue
+    Three colours, three meanings:
 
-    Requiring author confirmation alongside a strong title catches the
-    fabrication pattern where a coincidentally-similar real paper exists
-    by *different* authors.  When authors are missing from extraction we
-    fall back to title-only at the green threshold.
+    Green ("match") — confidently the cited paper
+        – title ≥ 0.90 AND (authors ≥ 0.35 OR no author data)
+        – OR title ∈ [0.70, 0.90) AND authors ≥ 0.35
+
+    Red ("mismatch") — confidently the WRONG paper at the *same* title
+        – title ≥ 0.90 (essentially identical) AND authors clearly
+          disagree (asim known, < 0.35).  This is the classic
+          fabrication / wrong-attribution tell: a paper with this exact
+          title exists, just not the one cited.
+        – ALSO red when a cited identifier (DOI / arXiv ID) resolves to
+          a different paper.  That case is set externally via
+          `wrong_doi` / `wrong_arxiv_id` flags and forces "mismatch".
+
+    Yellow ("fuzzy") — couldn't confidently find it
+        – Tier 2 (title 0.70 – 0.90) where authors don't confirm.  A
+          70-90% title overlap is usually word-overlap, not the same
+          paper — we can't *prove* it's wrong, just that we didn't find
+          it.  Examples: a TCT blog post returning a "language models
+          in biology" academic paper at 73% title.
+        – Tier 3 (title < 0.70).  The source returned the nearest-titled
+          paper in its index — not evidence of a wrong paper, only of
+          insufficient signal.
     """
-    is_arxiv = "arxiv" in (found_venue or "").lower()
-
-    # Tier 1: strong title (≥ 0.90).
-    if tsim is not None and tsim >= MATCH_THRESHOLD:
-        # Require author confirmation when we have authors on both sides;
-        # otherwise (asim is None) trust the strong title.
-        if asim is None or asim >= AUTHOR_MATCH_THRESHOLD:
-            # Venue contradiction (non-arXiv) downgrades to fuzzy
-            if vsim is not None and vsim < VENUE_MISMATCH_THRESHOLD and not is_arxiv:
-                return "fuzzy"
-            return "match"
-        # Title matches but authors clearly disagree → likely a different
-        # paper with a similar title (classic fabrication / wrong-DOI tell).
+    if tsim is None:
         return "fuzzy"
 
-    # Tier 2: medium title (0.70 — 0.90) needs an explicit author confirm.
-    if tsim is not None and tsim >= FUZZY_THRESHOLD:
+    # Tier 1: strong title (≥ 0.90) — title is essentially identical.
+    if tsim >= MATCH_THRESHOLD:
+        if asim is not None and asim < AUTHOR_MATCH_THRESHOLD:
+            return "mismatch"   # wrong paper at the exact title
+        return "match"
+
+    # Tier 2: medium title (0.70 – 0.90).  Likely word overlap; only
+    # call it a match when authors corroborate.  Otherwise fall through
+    # to "fuzzy" — we don't have enough to claim *wrong*, only that we
+    # didn't confidently find it.
+    if tsim >= FUZZY_THRESHOLD:
         if asim is not None and asim >= AUTHOR_MATCH_THRESHOLD:
-            if vsim is not None and vsim < VENUE_MISMATCH_THRESHOLD and not is_arxiv:
-                return "fuzzy"
             return "match"
         return "fuzzy"
 
-    # Tier 3: weak title — authors or non-arXiv venue can salvage it to fuzzy.
-    author_confirms = asim is not None and asim >= AUTHOR_MATCH_THRESHOLD
-    venue_confirms  = vsim is not None and vsim >= 0.70 and not is_arxiv
-    if author_confirms or venue_confirms:
-        return "fuzzy"
-    return "mismatch"
+    # Tier 3: weak title (< 0.70) — couldn't find it.
+    return "fuzzy"
 
 
 # ---------------------------------------------------------------------------
@@ -397,6 +558,28 @@ def _extract_doi(ref: dict[str, Any]) -> str | None:
 
 def _extract_arxiv_id(ref: dict[str, Any]) -> str | None:
     for field in ("url", "raw", "doi"):
+        val = ref.get(field, "") or ""
+        m   = _ARXIV_ID_RE.search(val)
+        if m:
+            return m.group(1) or m.group(2)
+    return None
+
+
+def _cited_arxiv_id(ref: dict[str, Any]) -> str | None:
+    """
+    Return an arXiv ID ONLY when it actually appears in the citation's
+    user-authored text — `raw` (original PDF text) or `venue` (parsed
+    from raw text by GROBID).  These are reliable signals the user
+    really cited this ID.
+
+    NOT checked: `url`, `doi`.  The LLM repair pass occasionally injects
+    a fabricated arxiv URL with a hallucinated ID into `url`; without
+    this guard we'd accuse the user of citing an ID they never wrote.
+    We use the broader `_extract_arxiv_id` for routing (worth a shot at
+    arxiv if any field has an ID), but `_cited_arxiv_id` for "wrong
+    arXiv ID" claims (only blame the user for an ID they actually cited).
+    """
+    for field in ("raw", "venue"):
         val = ref.get(field, "") or ""
         m   = _ARXIV_ID_RE.search(val)
         if m:
@@ -505,7 +688,7 @@ def _s2_paper_to_result(
     return result
 
 
-@_cached("semantic_scholar")
+@_cached("semantic_scholar", postprocess=_refresh_label)
 def _lookup_semantic_scholar(ref: dict[str, Any]) -> dict[str, Any]:
     extracted_title   = ref.get("title", "")
     extracted_venue   = ref.get("venue", "")
@@ -515,8 +698,9 @@ def _lookup_semantic_scholar(ref: dict[str, Any]) -> dict[str, Any]:
 
     for api_key in keys_to_try:
         try:
-            data      = None
-            wrong_doi = None
+            data           = None
+            wrong_doi      = None
+            wrong_arxiv_id = None
 
             if doi:
                 doi_data = _s2_get(f"paper/DOI:{doi}", {"fields": _S2_FIELDS}, api_key)
@@ -529,7 +713,18 @@ def _lookup_semantic_scholar(ref: dict[str, Any]) -> dict[str, Any]:
             if data is None:
                 arxiv_id = _extract_arxiv_id(ref)
                 if arxiv_id:
-                    data = _s2_get(f"paper/ARXIV:{arxiv_id}", {"fields": _S2_FIELDS}, api_key)
+                    aid_data = _s2_get(f"paper/ARXIV:{arxiv_id}", {"fields": _S2_FIELDS}, api_key)
+                    if aid_data:
+                        # Wrong-arXiv-ID detection: same precision tell as
+                        # wrong_doi — cited ID resolves to a different
+                        # paper.  Only blame the user if the ID actually
+                        # appears in the citation's raw text — otherwise
+                        # the LLM may have fabricated it in `url` and we
+                        # shouldn't surface it as a citation error.
+                        if not extracted_title or title_similarity(extracted_title, aid_data.get("title", "")) >= 0.5:
+                            data = aid_data
+                        elif _cited_arxiv_id(ref):
+                            wrong_arxiv_id = _cited_arxiv_id(ref)
 
             if data is None and extracted_title:
                 resp   = _s2_get("paper/search", {"query": extracted_title, "limit": 3, "fields": _S2_FIELDS}, api_key)
@@ -537,11 +732,22 @@ def _lookup_semantic_scholar(ref: dict[str, Any]) -> dict[str, Any]:
                 data   = papers[0] if papers else None
 
             if data is None:
+                # If we routed by an identifier that resolved to a clearly
+                # wrong paper, surface that fact instead of "not_found".
+                if wrong_doi or wrong_arxiv_id:
+                    r = {"status": "found", "label": "mismatch",
+                         "similarity": 0.0, "found_title": "",
+                         "found_authors": "", "found_venue": "",
+                         "authors_sim": None, "venue_sim": None,
+                         "venue_label": "unknown"}
+                    if wrong_doi:      r["wrong_doi"]      = wrong_doi
+                    if wrong_arxiv_id: r["wrong_arxiv_id"] = wrong_arxiv_id
+                    return r
                 return {"status": "not_found"}
 
             result = _s2_paper_to_result(data, extracted_title, extracted_venue, extracted_authors)
-            if wrong_doi:
-                result["wrong_doi"] = wrong_doi
+            if wrong_doi:      result["wrong_doi"]      = wrong_doi
+            if wrong_arxiv_id: result["wrong_arxiv_id"] = wrong_arxiv_id
             return result
 
         except PermissionError:
@@ -651,7 +857,7 @@ def _s2_batch_prewarm(refs: list[dict[str, Any]]) -> int:
 # DBLP
 # ---------------------------------------------------------------------------
 
-@_cached("dblp")
+@_cached("dblp", postprocess=_refresh_label)
 def _lookup_dblp(ref: dict[str, Any]) -> dict[str, Any]:
     extracted_title   = ref.get("title", "")
     extracted_venue   = ref.get("venue", "")
@@ -717,7 +923,7 @@ def _lookup_dblp(ref: dict[str, Any]) -> dict[str, Any]:
 # OpenAlex
 # ---------------------------------------------------------------------------
 
-@_cached("openalex")
+@_cached("openalex", postprocess=_refresh_label)
 def _lookup_openalex(ref: dict[str, Any]) -> dict[str, Any]:
     extracted_title   = ref.get("title", "")
     extracted_venue   = ref.get("venue", "")
@@ -925,22 +1131,41 @@ def _arxiv_batch_prewarm(refs: list[dict[str, Any]]) -> int:
             tsim = title_similarity(extracted_title, found_title) if extracted_title else None
             asim = (author_similarity(extracted_authors, found_authors)
                     if (extracted_authors and found_authors) else None)
-            cache.set("arxiv", key, {
+
+            # Wrong-arXiv-ID detection: only blame the user if the ID
+            # they cited (i.e. appears in raw text) is the one we just
+            # resolved.  The LLM repair pass occasionally fabricates an
+            # arxiv URL with a hallucinated ID — that ID makes it into
+            # `ref["url"]` but never into `ref["raw"]`, so we don't
+            # confuse the user with a "wrong ID" claim they never made.
+            wrong_arxiv_id = None
+            cited_id = _cited_arxiv_id(ref)
+            if (tsim is not None and tsim < 0.50 and extracted_title
+                    and cited_id):
+                wrong_arxiv_id = cited_id
+                label = "mismatch"
+            else:
+                label = _composite_label(tsim, asim) if tsim is not None else None
+
+            entry = {
                 "status":        "found",
                 "found_title":   found_title,
                 "found_authors": found_authors,
                 "similarity":    tsim,
                 "authors_sim":   asim,
-                "label":         _composite_label(tsim, asim) if tsim is not None else None,
+                "label":         label,
                 "venue_sim":     None,
                 "venue_label":   "unknown",
                 "arxiv_id":      full_id,
                 "url":           paper.entry_id,
-            })
+            }
+            if wrong_arxiv_id:
+                entry["wrong_arxiv_id"] = wrong_arxiv_id
+            cache.set("arxiv", key, entry)
     return len(pending)
 
 
-@_cached("arxiv")
+@_cached("arxiv", postprocess=_refresh_label)
 def _lookup_arxiv(ref: dict[str, Any]) -> dict[str, Any]:
     """
     Resolve an arXiv ID and compare the actual paper's title against the
@@ -976,18 +1201,34 @@ def _lookup_arxiv(ref: dict[str, Any]) -> dict[str, Any]:
         asim = (author_similarity(extracted_authors, found_authors)
                 if (extracted_authors and found_authors) else None)
 
-        return {
+        # Wrong-arXiv-ID detection: only flag when the cited raw text
+        # actually mentions an arXiv ID.  The LLM repair step sometimes
+        # injects a hallucinated ID into ref["url"]; without this guard
+        # we'd accuse the user of citing an ID they never wrote.
+        wrong_arxiv_id = None
+        cited_id = _cited_arxiv_id(ref)
+        if (tsim is not None and tsim < 0.50 and extracted_title
+                and cited_id):
+            wrong_arxiv_id = cited_id
+            label = "mismatch"
+        else:
+            label = _composite_label(tsim, asim) if tsim is not None else None
+
+        result = {
             "status":        "found",
             "found_title":   found_title,
             "found_authors": found_authors,
             "similarity":    tsim,
             "authors_sim":   asim,
-            "label":         _composite_label(tsim, asim) if tsim is not None else None,
+            "label":         label,
             "venue_sim":     None,
             "venue_label":   "unknown",
             "arxiv_id":      arxiv_id_found,
             "url":           paper.entry_id,
         }
+        if wrong_arxiv_id:
+            result["wrong_arxiv_id"] = wrong_arxiv_id
+        return result
 
     except Exception as exc:
         return {"status": "error", "error": str(exc)}
@@ -997,7 +1238,137 @@ def _lookup_arxiv(ref: dict[str, Any]) -> dict[str, Any]:
 # Crossref  (full validation when DOI present; title-search fallback)
 # ---------------------------------------------------------------------------
 
-@_cached("crossref")
+@_cached("crossref", postprocess=_refresh_label)
+def _first_str(value: Any) -> str:
+    """Return the first non-empty string found in `value`, unwrapping
+    nested lists if Crossref hands us something like ``[["Title"]]``."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        for item in value:
+            s = _first_str(item)
+            if s:
+                return s
+    if isinstance(value, dict):
+        # Crossref `event` is a dict; sometimes container-title comes as one too
+        for k in ("name", "title"):
+            s = _first_str(value.get(k))
+            if s:
+                return s
+    return ""
+
+
+def _crossref_msg_to_result(
+    msg: dict, doi_val: str,
+    extracted_title: str = "",
+    extracted_venue: str = "",
+    extracted_authors: str = "",
+) -> dict[str, Any]:
+    """Convert a Crossref `message` dict to our result schema."""
+    found_title = _first_str(msg.get("title"))
+    found_venue = _first_str(msg.get("container-title")) \
+                  or _first_str(msg.get("event"))
+    found_authors = "; ".join(
+        f"{a.get('given', '')} {a.get('family', '')}".strip()
+        for a in (msg.get("author") or [])
+        if isinstance(a, dict)
+    )
+    # Defensive date-parts extraction.  Crossref's `published` is usually
+    # a dict {"date-parts": [[YYYY, MM, DD]]}, but it can also come back
+    # as a list, a string, or be missing entirely on weird records.
+    year = ""
+    pub = msg.get("published")
+    if isinstance(pub, dict):
+        parts = pub.get("date-parts")
+        if isinstance(parts, list) and parts:
+            first = parts[0] if isinstance(parts[0], list) else None
+            if first and first[0]:
+                year = str(first[0])
+
+    tsim = title_similarity(extracted_title, found_title)      if (extracted_title and found_title) else None
+    asim = author_similarity(extracted_authors, found_authors)  if (extracted_authors and found_authors) else None
+    vsim = venue_similarity(extracted_venue, found_venue)       if (extracted_venue and found_venue) else None
+
+    return {
+        "status":        "found",
+        "found_title":   found_title,
+        "found_authors": found_authors,
+        "found_venue":   found_venue,
+        "similarity":    tsim,
+        "authors_sim":   asim,
+        "label":         _composite_label(tsim, asim, found_venue, vsim),
+        "venue_sim":     vsim,
+        "venue_label":   _venue_label(vsim, found_venue),
+        "year":          year,
+        "doi":           doi_val,
+        "url":           f"https://doi.org/{doi_val}",
+    }
+
+
+def _crossref_batch_prewarm(refs: list[dict[str, Any]]) -> int:
+    """
+    Pre-populate the Crossref cache via the filter API (~25 DOIs per call).
+
+    Crossref doesn't have a true batch endpoint, but
+        GET /works?filter=doi:X,doi:Y&rows=N
+    returns up to N records in one round trip.  Collapsing the per-ref
+    Crossref calls is the biggest remaining wall-time win because the
+    S2/OpenAlex short-circuit only helps when those two have the paper;
+    real DOIs that only Crossref indexes still hit per-ref otherwise.
+    """
+    if not refs:
+        return 0
+    cache = _get_cache()
+
+    pending: list[tuple[str, str, dict[str, Any]]] = []
+    seen: set[str] = set()
+    for ref in refs:
+        key = _cache_key(ref)
+        if not key or key in seen:
+            continue
+        if cache.get("crossref", key) is not None:
+            continue
+        doi = _extract_doi(ref)
+        if not doi:
+            continue
+        pending.append((key, doi, ref))
+        seen.add(key)
+    if not pending:
+        return 0
+
+    msgs_by_doi: dict[str, dict] = {}
+    # 25 DOIs per query — Crossref accepts up to ~50 in the filter but the
+    # URL gets long; 25 keeps us well under any limit and parallelises better.
+    for i in range(0, len(pending), 25):
+        chunk = pending[i : i + 25]
+        doi_filter = ",".join(f"doi:{d}" for _, d, _ in chunk)
+        params = {"filter": doi_filter, "rows": 25}
+        try:
+            r = _http_get_retry(_CR_BASE, params=params, headers=_CR_HEADERS, timeout=15)
+            r.raise_for_status()
+            items = r.json().get("message", {}).get("items", [])
+            for msg in items:
+                d = (msg.get("DOI") or "").lower()
+                if d:
+                    msgs_by_doi[d] = msg
+        except Exception:
+            continue   # this chunk falls back to per-ref lookups
+
+    for key, doi, ref in pending:
+        msg = msgs_by_doi.get(doi.lower())
+        if msg is None:
+            cache.set("crossref", key, {"status": "not_found"})
+        else:
+            result = _crossref_msg_to_result(
+                msg, msg.get("DOI", doi),
+                ref.get("title", ""), ref.get("venue", ""), ref.get("authors", ""),
+            )
+            cache.set("crossref", key, result)
+    return len(pending)
+
+
 def _lookup_crossref(ref: dict[str, Any]) -> dict[str, Any]:
     extracted_title   = ref.get("title", "")
     extracted_venue   = ref.get("venue", "")
@@ -1005,34 +1376,9 @@ def _lookup_crossref(ref: dict[str, Any]) -> dict[str, Any]:
     doi = _extract_doi(ref)
 
     def _build(msg: dict, doi_val: str) -> dict[str, Any]:
-        found_title = (msg.get("title") or [""])[0]
-        ct          = msg.get("container-title") or []
-        found_venue = ct[0] if ct else (msg.get("event") or {}).get("name", "")
-        found_authors = "; ".join(
-            f"{a.get('given', '')} {a.get('family', '')}".strip()
-            for a in (msg.get("author") or [])
+        return _crossref_msg_to_result(
+            msg, doi_val, extracted_title, extracted_venue, extracted_authors,
         )
-        year_parts = (msg.get("published", {}).get("date-parts") or [[None]])[0]
-        year = str(year_parts[0]) if year_parts and year_parts[0] else ""
-
-        tsim = title_similarity(extracted_title, found_title)      if (extracted_title and found_title) else None
-        asim = author_similarity(extracted_authors, found_authors)  if (extracted_authors and found_authors) else None
-        vsim = venue_similarity(extracted_venue, found_venue)       if (extracted_venue and found_venue) else None
-
-        return {
-            "status":        "found",
-            "found_title":   found_title,
-            "found_authors": found_authors,
-            "found_venue":   found_venue,
-            "similarity":    tsim,
-            "authors_sim":   asim,
-            "label":         _composite_label(tsim, asim, found_venue, vsim),
-            "venue_sim":     vsim,
-            "venue_label":   _venue_label(vsim, found_venue),
-            "year":          year,
-            "doi":           doi_val,
-            "url":           f"https://doi.org/{doi_val}",
-        }
 
     try:
         if doi:
@@ -1075,7 +1421,7 @@ _OL_BASE    = "https://openlibrary.org/search.json"
 _OL_HEADERS = {"User-Agent": "ReferenceCleaner/1.0 (mailto:contact@example.com)"}
 
 
-@_cached("openlibrary")
+@_cached("openlibrary", postprocess=_refresh_label)
 def _lookup_openlibrary(ref: dict[str, Any]) -> dict[str, Any]:
     """
     Search Open Library by title (+ first-author hint when available).
@@ -1192,7 +1538,7 @@ def _scholarly_reset_budget(n: int = _SCHOLARLY_BUDGET_DEFAULT) -> None:
         _SCHOLARLY_BUDGET_REMAINING = max(0, n)
 
 
-@_cached("scholarly")
+@_cached("scholarly", postprocess=_refresh_label)
 def _lookup_scholarly(ref: dict[str, Any]) -> dict[str, Any]:
     global _SCHOLARLY_LAST_CALL, _SCHOLARLY_BLOCKED
 
@@ -1572,7 +1918,7 @@ def lookup_all(
     references: list[dict[str, Any]],
     delay: float = 0.0,
     progress_cb=None,
-    max_concurrent: int = 5,
+    max_concurrent: int = 8,
     scholarly_budget: int = _SCHOLARLY_BUDGET_DEFAULT,
 ) -> list[dict[str, Any]]:
     """
@@ -1583,10 +1929,10 @@ def lookup_all(
     one HTTP request and the per-ref S2 calls become cache hits.
 
     Each ref's internal API fanout uses up to 5 workers, so peak parallel
-    HTTP requests = max_concurrent * 5.  We capped this at 5 (down from
-    an earlier experiment at 8) because S2 starts returning 429s past
-    ~25 parallel calls and its exponential backoff (`2**attempt`) erases
-    the parallelism win on cold caches.
+    HTTP requests = max_concurrent * 5.  With the rate-limit caps (max
+    5 s sleep, 3 retries) and the S2/OpenAlex short-circuit (most DOI
+    refs never hit live Crossref), 8 concurrent refs is now safe — the
+    earlier cap at 5 was paired with longer 4-retry exponential backoff.
 
     Set ``scholarly_budget=0`` to disable Phase 5 Google Scholar lookups
     entirely (recommended for batch / benchmark runs — Scholar's 2.5 s
@@ -1597,9 +1943,16 @@ def lookup_all(
     _scholarly_reset_budget(scholarly_budget)
 
     # Identifier-batch pre-warm — one round trip per source, populates the
-    # cache so per-ref S2 / OpenAlex / arXiv calls become local lookups.
-    with ThreadPoolExecutor(max_workers=3) as _pool:
-        for _fn in (_s2_batch_prewarm, _oa_batch_prewarm, _arxiv_batch_prewarm):
+    # cache so per-ref S2 / OpenAlex / Crossref / arXiv calls become local
+    # lookups.  Four sources run concurrently against four independent APIs.
+    _batch_fns = (
+        _s2_batch_prewarm,
+        _oa_batch_prewarm,
+        _crossref_batch_prewarm,
+        _arxiv_batch_prewarm,
+    )
+    with ThreadPoolExecutor(max_workers=len(_batch_fns)) as _pool:
+        for _fn in _batch_fns:
             _pool.submit(_fn, references)
         # implicit wait on context-manager exit
 

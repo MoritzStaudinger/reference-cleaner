@@ -132,29 +132,35 @@ def cache_key(ref: dict[str, Any]) -> str | None:
 # Decorator
 # ---------------------------------------------------------------------------
 
-def cached(source_name: str) -> Callable:
+def cached(source_name: str, postprocess: Callable | None = None) -> Callable:
     """
     Decorator that wraps a ``_lookup_<source>(ref) -> dict`` function with
     SQLite caching.  Cache miss → call wrapped function and (if cacheable)
     store the result.  Cache hit → skip the API call entirely.
+
+    Pass ``postprocess`` to apply a (result -> result) transformation on
+    every returned dict (whether the result came from a cache hit or a
+    fresh call).  Use this to recompute fields whose logic may have
+    changed since the result was cached — e.g. composite labels.
     """
     def decorator(fn: Callable) -> Callable:
         @wraps(fn)
         def wrapped(ref: dict[str, Any], *args, **kwargs) -> dict:
             key = cache_key(ref)
             if not key:
-                return fn(ref, *args, **kwargs)
+                r = fn(ref, *args, **kwargs)
+                return postprocess(r) if postprocess else r
 
             cache = get_cache()
             hit = cache.get(source_name, key)
             if hit is not None:
-                return hit
+                return postprocess(hit) if postprocess else hit
 
             result = fn(ref, *args, **kwargs) or {}
             status = result.get("status")
             if status in _CACHEABLE_STATUSES:
                 cache.set(source_name, key, result)
-            return result
+            return postprocess(result) if postprocess else result
 
         return wrapped
     return decorator

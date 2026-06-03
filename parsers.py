@@ -617,6 +617,75 @@ def _norm_for_dedup(text: str) -> str:
     return " ".join(text.split())
 
 
+def dedupe_references(
+    refs: list[dict[str, Any]],
+    title_threshold: int = 88,
+) -> tuple[list[dict[str, Any]], int]:
+    """
+    Collapse near-duplicate references in-place.
+
+    Two refs are considered duplicates when their normalised titles match
+    at `token_sort_ratio >= title_threshold` (default 88) — strict enough
+    to avoid false-merges of "X" vs "X: A Survey", loose enough to catch
+    "Foo bar" / "Foo Bar." / "Foo  bar".
+
+    Returns (deduped_list, n_merged).  Field-level merge picks the LONGEST
+    non-empty value for each field across duplicates (titles, authors,
+    venues sometimes get truncated in one source but full in another).
+    Each kept ref gains a `_merged_from` list of duplicate raws so the
+    user can see what was folded together.
+    """
+    from rapidfuzz import fuzz as _fuzz
+    if not refs:
+        return [], 0
+
+    kept: list[dict[str, Any]] = []
+    kept_titles_norm: list[str] = []
+    merged_count = 0
+
+    def _merge_into(canonical: dict[str, Any], dup: dict[str, Any]) -> None:
+        # Pick the longer non-empty value for each field
+        for field in ("title", "authors", "year", "venue", "doi", "url"):
+            cur = (canonical.get(field) or "").strip()
+            new = (dup.get(field) or "").strip()
+            if new and (not cur or len(new) > len(cur)):
+                canonical[field] = new
+        # Track what we merged for the audit card
+        canonical.setdefault("_merged_from", []).append(
+            (dup.get("raw") or "")[:200]
+        )
+
+    for ref in refs:
+        # User-added refs are NEVER auto-merged — they're explicit user input.
+        if ref.get("_user_added"):
+            kept.append(ref)
+            kept_titles_norm.append(_norm_for_dedup(ref.get("title") or ""))
+            continue
+
+        t = _norm_for_dedup(ref.get("title") or "")
+        if not t:
+            # No title to compare on — keep as-is (junk filter handles this)
+            kept.append(ref)
+            kept_titles_norm.append("")
+            continue
+
+        # Find a fuzzy title match among already-kept refs
+        match_idx = -1
+        for i, kt in enumerate(kept_titles_norm):
+            if kt and _fuzz.token_sort_ratio(t, kt) >= title_threshold:
+                match_idx = i
+                break
+
+        if match_idx >= 0:
+            _merge_into(kept[match_idx], ref)
+            merged_count += 1
+        else:
+            kept.append(ref)
+            kept_titles_norm.append(t)
+
+    return kept, merged_count
+
+
 def _merge_ref_lists(
     primary: list[dict[str, Any]],
     secondary: list[dict[str, Any]],

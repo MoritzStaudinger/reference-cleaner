@@ -40,9 +40,9 @@ def _overall_status(lr: dict | None) -> str:
         return "missing"
     if "match" in labels:
         return "match"
-    if "fuzzy" in labels:
-        return "missing"
-    return "mismatch"
+    if "mismatch" in labels:
+        return "mismatch"
+    return "missing"
 
 
 def _best_found(lr: dict) -> dict | None:
@@ -493,11 +493,12 @@ def _per_ref_audit(n: int, ref: dict, lr: dict | None) -> str:
     title = ref.get("title") or "(no title extracted)"
     page  = ref.get("page")
     loc   = f" · p. {page}" if page else ""
+    badge = " ✏️ *user-added*" if ref.get("_user_added") else ""
 
     icon, headline, explanation = _conclusion(ref, lr or {})
 
     out: list[str] = []
-    out.append(f"### {icon} [{n}] {title}{loc}\n")
+    out.append(f"### {icon} [{n}] {title}{loc}{badge}\n")
     raw = (ref.get("raw") or "").strip()
     if raw:
         out.append(f"> {raw}\n")

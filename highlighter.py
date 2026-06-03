@@ -111,6 +111,11 @@ def highlight_references(
     annotated_pdf : bytes
     enriched_refs : list[dict]
         Each entry gains ``page`` (1-based int or None) and ``found`` (bool).
+    orphan_blocks : list[dict]
+        Text blocks on pages where parsed refs live but that no ref claimed
+        AND that look citation-shaped (year + ≥40 chars).  Surfaced in the
+        UI as "possible missed references" the user can add manually.
+        Each: {"page": 1-based int, "rect": [x0,y0,x1,y1], "text": str}.
     """
     if statuses is None:
         statuses = ["pending"] * len(references)
@@ -188,9 +193,54 @@ def highlight_references(
             used_block_idx.add(best_idx)
             entry["found"] = True
             entry["page"] = pn + 1
+            # Expose the rect so the JS PDF component can overlay the
+            # highlight on its own canvas (PDF.js doesn't render PDF
+            # annotation objects by default).
+            #
+            # COORDINATE FLIP: PyMuPDF uses top-down y (y=0 at top of page);
+            # PDF.js's viewport.convertToViewportPoint expects PDF-native
+            # bottom-up y (y=0 at bottom).  We translate here so the
+            # component can pass the rect straight into the converter.
+            page_h = page.rect.height
+            entry["rect"] = [
+                rect.x0,
+                page_h - rect.y1,   # bottom of pymupdf box → y0 in PDF native
+                rect.x1,
+                page_h - rect.y0,   # top of pymupdf box → y1 in PDF native
+            ]
+            entry["status"] = status
 
         enriched.append(entry)
 
+    # Identify orphan blocks — text paragraphs in the bibliography region
+    # that no reference claimed.  These are the most likely "missed refs"
+    # the user might want to add manually.  We restrict to blocks on pages
+    # where at least one parsed ref was located (so we don't surface body
+    # text from the rest of the doc).
+    pages_with_refs = {e["page"] for e in enriched if e.get("page")}
+    orphans: list[dict[str, Any]] = []
+    import re as _re_h
+    for i, (pn, rect, text, _norm) in enumerate(blocks):
+        if i in used_block_idx:
+            continue
+        if (pn + 1) not in pages_with_refs:
+            continue
+        # Heuristic: must look like a citation (has year + reasonable length).
+        if len(text) < 40:
+            continue
+        if not _re_h.search(r"\b(?:19|20)\d{2}\b", text):
+            continue
+        orphans.append({
+            "page": pn + 1,
+            "rect": [rect.x0, rect.y0, rect.x1, rect.y1],
+            "text": text,
+        })
+        # NOTE: we deliberately do NOT draw the orphan rectangle as a PyMuPDF
+        # annotation here.  The PDF selector component receives `orphans` via
+        # its `annotations` arg and paints the dashed outline as a DOM overlay
+        # on top of the rendered canvas.  Drawing both produces overlapping
+        # boxes.
+
     annotated_bytes = doc.tobytes(garbage=2, deflate=True)
     doc.close()
-    return annotated_bytes, enriched
+    return annotated_bytes, enriched, orphans

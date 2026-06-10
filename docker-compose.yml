@@ -27,7 +27,10 @@ services:
     image: lfoppiano/grobid:0.8.1
     container_name: ares-grobid
     restart: unless-stopped
-    mem_limit: 8g
+    # 6 GB JVM heap + native memory (mmapped Wapiti models, JIT cache,
+    # thread stacks) climbs to ~9-10 GB in practice — an 8 GB cap gets
+    # OOM-killed during model loading.
+    mem_limit: 12g
     environment:
       - JAVA_OPTS=-Xmx6g
     # No host port — only the ares service talks to grobid via the

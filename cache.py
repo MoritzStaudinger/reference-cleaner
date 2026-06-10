@@ -25,7 +25,7 @@ from typing import Any, Callable
 
 _PROJECT_ROOT = Path(__file__).resolve().parent
 CACHE_PATH    = Path(os.getenv(
-    "REFCLEANER_CACHE", _PROJECT_ROOT / "data" / "cache.sqlite"))
+    "ARES_CACHE", _PROJECT_ROOT / "data" / "cache.sqlite"))
 
 _CACHEABLE_STATUSES = {"found", "not_found", "not_in_anthology"}
 

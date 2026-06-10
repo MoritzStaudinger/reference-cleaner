@@ -93,18 +93,27 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     }
 
-    /* ─────────  Text layer  ───────── */
+    /* ─────────  Text layer (PDF.js v4 TextLayer compatible) ───────── */
     .text-layer {
       position: absolute;
       left: 0;
       top: 0;
+      overflow: hidden;
       line-height: 1;
+      text-align: initial;
+      forced-color-adjust: none;
       user-select: text;
       -webkit-user-select: text;
       pointer-events: auto;
       cursor: text;
+      transform-origin: 0% 0%;
     }
-    .text-layer span {
+    /* PDF.js sets per-span position, font-family, font-size, and
+       transform: scaleX(...) inline.  We must NOT override transform
+       or transform-origin here — that's what makes the invisible
+       selection bounds match the visible canvas-rendered text width. */
+    .text-layer span,
+    .text-layer br {
       color: transparent;
       position: absolute;
       white-space: pre;

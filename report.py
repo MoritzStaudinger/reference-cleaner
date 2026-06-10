@@ -20,7 +20,7 @@ import html as _html
 from datetime import date
 from typing import Any
 
-_VALIDATION_SOURCES = ("semantic_scholar", "acl_anthology", "dblp", "openalex", "crossref", "openlibrary", "scholarly", "arxiv")
+_VALIDATION_SOURCES = ("doi_org", "semantic_scholar", "acl_anthology", "dblp", "openalex", "crossref", "openlibrary", "scholarly", "arxiv")
 
 
 # ---------------------------------------------------------------------------
@@ -57,16 +57,131 @@ def _best_found(lr: dict) -> dict | None:
     return max(candidates, key=lambda r: r.get("similarity") or 0.0)
 
 
-def _has_wrong_doi(lr: dict) -> str | None:
-    """Return the wrong DOI string if flagged, else None."""
+def _has_wrong_doi(lr: dict | None) -> str | None:
+    """Return the wrong DOI string if flagged, else None.
+
+    None-safe: when `lr` is None (pending manual-ref slot — added after
+    lookups, not yet queried), there's no wrong-DOI information to surface.
+    """
+    if not lr:
+        return None
     return lr.get("semantic_scholar", {}).get("wrong_doi") or None
 
 
-def _venue_concern(lr: dict) -> tuple[str, str] | None:
+# Order matters — the first matching category wins.  Strongest-signal
+# categories (cited identifier resolves to a different paper) come first,
+# weakest (just couldn't find it) come last.
+SUSPICIOUS_CATEGORIES = (
+    "wrong_arxiv_id",      # cited arxiv ID resolves to a different paper
+    "wrong_doi",           # cited DOI resolves to a different paper
+    "title_authors_mismatch",  # high title sim (≥0.90) but authors clearly disagree
+    "venue_mismatch",      # title+authors match but venue is wrong
+    "uncertain_match",     # tier-2 fuzzy: best source returned a paper at
+                           # 0.70-0.90 title sim but couldn't confirm via
+                           # authors.  Often legitimate-but-obscure refs
+                           # (blog posts, niche venues, paper not yet indexed).
+    "weak_title_match",    # tier-3 weak: max title sim < 0.70 — source didn't
+                           # really find the paper, returned the nearest-titled
+                           # thing in its index.  Often genuine fabrications.
+    "not_in_any_index",    # all queried sources returned not_found
+    "all_errored",         # all queried sources errored (transient — re-run advised)
+    "unclassified",        # fallback — shouldn't fire often
+)
+
+
+def _categorise_suspicious(lr: dict | None) -> str | None:
+    """
+    For a ref whose overall status is *not* `match`, classify WHY.
+
+    Returns one of `SUSPICIOUS_CATEGORIES`, or None when the ref is
+    clean (overall status == match) or pending.
+
+    Useful for:
+      - per-ref reason display in the audit UI
+      - aggregate failure-mode breakdown in benchmark summaries
+        ("of N flagged refs, X were wrong-arxiv-id, Y were
+        title-authors mismatch, ...")
+    """
+    if not lr:
+        return None
+    overall = _overall_status(lr)
+    if overall == "match":
+        return None
+    if overall == "pending":
+        return None
+
+    found_sources = [(s, lr.get(s, {})) for s in _VALIDATION_SOURCES
+                     if lr.get(s, {}).get("status") == "found"]
+
+    # 1. Any source flagged a wrong cited identifier — strongest signal.
+    for _, r in found_sources:
+        if r.get("wrong_arxiv_id"):
+            return "wrong_arxiv_id"
+    for _, r in found_sources:
+        if r.get("wrong_doi"):
+            return "wrong_doi"
+
+    # 2. Title+authors mismatch — at least one source returned a paper
+    #    with high title similarity but authors clearly disagree.
+    #    Matches our `_composite_label` tier-1 mismatch rule.
+    for _, r in found_sources:
+        sim  = r.get("similarity")
+        asim = r.get("authors_sim")
+        if (sim is not None and sim >= 0.90
+                and asim is not None and asim < 0.35):
+            return "title_authors_mismatch"
+
+    # 3. Title+authors match but venue is wrong — a softer concern,
+    #    often a preprint-vs-published confusion.  Only surface when
+    #    `_overall_status` already escalated to mismatch (e.g. venue
+    #    rule forced it) so we don't relabel benign preprint-vs-pub
+    #    diffs that composite_label correctly let pass.
+    if overall == "mismatch":
+        for _, r in found_sources:
+            if (r.get("label") == "match"
+                    and r.get("venue_label") == "mismatch"):
+                return "venue_mismatch"
+
+    # 4a. Tier-2 fuzzy — best source returned a paper at 0.70-0.90
+    #     title sim but no source could confirm via authors.  Honestly
+    #     uncertain: could be the right paper at a slightly different
+    #     formatting, or a different paper with overlapping wording.
+    #     Legitimate cases dominate here (TCT blog posts, obscure
+    #     conference papers, non-Western venues).
+    if found_sources:
+        max_sim = max((r.get("similarity") or 0.0) for _, r in found_sources)
+        if 0.70 <= max_sim < 0.90:
+            return "uncertain_match"
+
+    # 4b. Tier-3 weak — max title sim < 0.70.  The source returned the
+    #     closest-titled thing in its index, not actually the cited
+    #     paper.  Stronger fabrication signal than 4a.
+    if found_sources:
+        max_sim = max((r.get("similarity") or 0.0) for _, r in found_sources)
+        if max_sim < 0.70:
+            return "weak_title_match"
+
+    # 5. Nothing came back at all — distinguish "all sources said
+    #    not_found" (likely fabricated or non-indexable) from "all
+    #    sources errored" (transient; advise re-run).
+    statuses = [lr.get(s, {}).get("status") for s in _VALIDATION_SOURCES]
+    queried_real = [s for s in statuses if s in ("found", "not_found", "error")]
+    if queried_real and all(s == "not_found" for s in queried_real if s != "error"):
+        if all(s in ("not_found", "skipped") for s in queried_real):
+            return "not_in_any_index"
+    if queried_real and all(s == "error" for s in queried_real if s != "skipped"):
+        return "all_errored"
+
+    return "unclassified"
+
+
+def _venue_concern(lr: dict | None) -> tuple[str, str] | None:
     """
     Return (extracted_venue, found_venue) if the title matched but the venue
     is clearly wrong in at least one source, else None.
     """
+    if not lr:
+        return None
     for src in _VALIDATION_SOURCES:
         r = lr.get(src, {})
         if r.get("status") == "found" and r.get("label") == "match":
@@ -98,8 +213,10 @@ def _classify(
             if wrong_doi:
                 moderate.append(entry)
             else:
-                # Check venue concern even for clean title matches
-                has_venue_issue = any(
+                # Check venue concern even for clean title matches.  lr
+                # is non-None here because _overall_status("pending") is
+                # caught by the `else` branch below — but guard anyway.
+                has_venue_issue = bool(lr) and any(
                     lr.get(src, {}).get("status") == "found"
                     and lr.get(src, {}).get("label") == "match"
                     and lr.get(src, {}).get("venue_label") == "mismatch"
@@ -110,6 +227,10 @@ def _classify(
                 else:
                     verified.append(entry)
         else:
+            # status == "pending" (lr is None — manual ref not yet
+            # looked up) or anything else falls through here.  We bucket
+            # both into not_found for the report; pending refs simply
+            # don't have a lookup verdict yet.
             not_found.append(entry)
 
     return major, moderate, venue, not_found, verified
@@ -182,21 +303,32 @@ def generate_report(
     lines: list[str] = []
 
     # --- Header ---
-    title_line = f"# Reference Quality Report"
+    title_line = f"# ARES Report"
     if pdf_name:
         title_line += f" — {pdf_name}"
     lines.append(title_line)
     lines.append(f"_Generated {date.today().isoformat()}"
                  + (f" · Parser: {parser}" if parser else "") + "_\n")
 
+    # Disclaimer at the top of every exported report.
+    lines.append(
+        "> **Human review is required for every result in this report.**  "
+        "The tool reports what academic databases say — it does not "
+        "decide whether a citation is correct.  Verified references can "
+        "still be wrong; \"not found\" does not mean fabricated; \"wrong "
+        "paper\" findings need confirmation against the original source.  "
+        "See the *Limitations and required human review* section of the "
+        "About page for the full list of failure modes.\n"
+    )
+
     # --- Summary table ---
     lines.append("## Summary\n")
     lines.append(f"| | |")
     lines.append(f"|---|---|")
     lines.append(f"| Total references | {n_total} |")
-    lines.append(f"| ✅ Verified | {n_ok} |")
-    lines.append(f"| ❌ Major errors (wrong paper cited) | {n_major} |")
-    lines.append(f"| ⚠️ Moderate errors (wrong DOI) | {n_mod} |")
+    lines.append(f"| 🟢 Verified | {n_ok} |")
+    lines.append(f"| 🔴 Major errors (wrong paper cited) | {n_major} |")
+    lines.append(f"| 🔴 Moderate errors (wrong DOI) | {n_mod} |")
     lines.append(f"| 🟡 Minor concerns (venue mismatch) | {n_venue} |")
     lines.append(f"| 🟡 Did not find in databases | {n_missing} |\n")
     lines.append(f"**Overall quality:** {quality}\n")
@@ -204,24 +336,24 @@ def generate_report(
     # Narrative
     if n_major:
         lines.append(
-            f"> ⚠️ **{n_major} reference{'s' if n_major > 1 else ''} appear to cite the wrong paper.** "
+            f"> **{n_major} reference{'s' if n_major > 1 else ''} appear to cite the wrong paper.** "
             "The title found in academic databases differs substantially from what is listed in the document. "
             "These should be checked carefully.\n"
         )
     if n_mod:
         lines.append(
-            f"> ⚠️ **{n_mod} reference{'s' if n_mod > 1 else ''} contain a DOI that resolves to a different paper.** "
+            f"> **{n_mod} reference{'s' if n_mod > 1 else ''} contain a DOI that resolves to a different paper.** "
             "The DOI may have been copy-pasted from a nearby reference.\n"
         )
     if n_venue:
         lines.append(
-            f"> 🟡 **{n_venue} reference{'s' if n_venue > 1 else ''} have a venue mismatch.** "
+            f"> **{n_venue} reference{'s' if n_venue > 1 else ''} have a venue mismatch.** "
             "The paper was found and the title is correct, but the conference or journal name "
             "does not match what the databases record.\n"
         )
     if n_missing:
         lines.append(
-            f"> 🟡 **{n_missing} reference{'s' if n_missing > 1 else ''} could not be located in any database** "
+            f"> **{n_missing} reference{'s' if n_missing > 1 else ''} could not be located in any database** "
             "in Semantic Scholar, DBLP, OpenAlex, Crossref, or Open Library. "
             "This is normal for books, theses, and very recent preprints, "
             "but warrants a manual check if the reference is a conference or journal paper.\n"
@@ -230,7 +362,7 @@ def generate_report(
     # --- Major errors ---
     if major:
         lines.append("---\n")
-        lines.append("## ❌ Major Errors — Wrong Paper Cited\n")
+        lines.append("## Major Errors — Wrong Paper Cited\n")
         lines.append(
             "The following references were found in academic databases, but the title "
             "in the document does not match the paper the citation data describes. "
@@ -255,7 +387,7 @@ def generate_report(
     # --- Moderate errors ---
     if moderate:
         lines.append("---\n")
-        lines.append("## ⚠️ Moderate Errors — Wrong DOI\n")
+        lines.append("## Moderate Errors — Wrong DOI\n")
         lines.append(
             "The following references have a title that matches a real paper, "
             "but the DOI listed in the document resolves to a *different* paper. "
@@ -274,7 +406,7 @@ def generate_report(
     # --- Venue concerns ---
     if venue:
         lines.append("---\n")
-        lines.append("## 🟡 Minor Concerns — Venue Mismatch\n")
+        lines.append("## Minor Concerns — Venue Mismatch\n")
         lines.append(
             "The following references have a confirmed title match, but the "
             "conference or journal name in the document differs from what academic "
@@ -303,7 +435,7 @@ def generate_report(
     # --- Not found ---
     if not_found:
         lines.append("---\n")
-        lines.append("## 🟡 Did Not Find in Databases\n")
+        lines.append("## Did Not Find in Databases\n")
         lines.append(
             "These references could not be matched in any of the queried databases. "
             "Books, dissertations, technical reports, and very recent preprints are "
@@ -321,7 +453,7 @@ def generate_report(
     # --- Verified ---
     if verified:
         lines.append("---\n")
-        lines.append(f"## ✅ Verified ({n_ok})\n")
+        lines.append(f"## Verified ({n_ok})\n")
         lines.append(
             "The following references were confirmed correct — title and venue "
             "match academic database records.\n"
@@ -339,7 +471,7 @@ def generate_report(
 
     # --- Detailed per-reference audit ---
     lines.append("---\n")
-    lines.append("## 🔎 Detailed Per-Reference Audit\n")
+    lines.append("## Detailed Per-Reference Audit\n")
     lines.append(
         "One card per reference: extracted fields, the conclusion the "
         "pipeline reached, and what each consulted source returned.\n"
@@ -366,18 +498,18 @@ _SOURCE_LABELS: list[tuple[str, str]] = [
 ]
 
 _STATUS_ICONS = {
-    "found":            "✅",
-    "not_found":        "❓",
-    "error":            "⚠️",
+    "found":            "🟢",
+    "not_found":        "—",
+    "error":            "—",
     "skipped":          "—",
     "not_in_anthology": "—",
     "no_index":         "—",
 }
 
 _LABEL_ICONS = {
-    "match":    "✅",
+    "match":    "🟢",
     "fuzzy":    "🟡",
-    "mismatch": "❌",
+    "mismatch": "🔴",
 }
 
 
@@ -385,9 +517,14 @@ def _pct(x: float | None) -> str:
     return f"{x:.0%}" if isinstance(x, (int, float)) else "—"
 
 
-def _conclusion(ref: dict, lr: dict) -> tuple[str, str, str]:
+def _conclusion(ref: dict, lr: dict | None) -> tuple[str, str, str]:
     """Return (icon, headline, explanation) for the overall verdict."""
     status   = _overall_status(lr)
+    # None-safe defaults for pending refs (manual add not yet looked up).
+    if lr is None:
+        return ("⚪", "Pending lookup",
+                "This reference was added manually and hasn't been queried "
+                "against the academic databases yet.")
     best     = _best_found(lr)
     wrong    = _has_wrong_doi(lr)
     found_in = [
@@ -401,7 +538,7 @@ def _conclusion(ref: dict, lr: dict) -> tuple[str, str, str]:
         # Title matches a real paper somewhere, but the DOI in the ref points
         # to a different one — copy-paste smell.
         return (
-            "⚠️",
+            "🔴",
             "Wrong DOI",
             f"Title matches a real paper, but the DOI `{wrong}` resolves to a "
             f"different paper on Semantic Scholar. The DOI may have been "
@@ -410,25 +547,25 @@ def _conclusion(ref: dict, lr: dict) -> tuple[str, str, str]:
     if status == "match":
         if found_in:
             return (
-                "✅",
+                "🟢",
                 "Verified",
                 f"Title confirmed in {', '.join(found_in)}.",
             )
-        return ("✅", "Verified", "Title confirmed by at least one source.")
+        return ("🟢", "Verified", "Title confirmed by at least one source.")
 
     if status == "mismatch":
         if best:
             ft  = best.get("found_title") or ""
             sim = best.get("similarity")
             return (
-                "❌",
+                "🔴",
                 "Wrong paper cited",
                 f"A paper was found in the databases but its title "
                 f'(*"{ft}"*, {_pct(sim)} similar) is too far from the cited '
                 f"title to be the same paper. The citation likely points to a "
                 f"different paper than what the bibliographic data identifies.",
             )
-        return ("❌", "Wrong paper cited", "Closest database match does not align with the cited title.")
+        return ("🔴", "Wrong paper cited", "Closest database match does not align with the cited title.")
 
     # status == "missing"
     queried = [
@@ -444,7 +581,7 @@ def _conclusion(ref: dict, lr: dict) -> tuple[str, str, str]:
     if lr.get("_router_path") == "junk_filter":
         if ref.get("_corruption") == "name_fragment_title":
             return (
-                "🚫",
+                "—",
                 "Parser corruption (needs LLM repair)",
                 "The regex parser put a fragment of the author list into the "
                 "title field (e.g. \"Li, P\"). The real title is somewhere "
@@ -453,14 +590,14 @@ def _conclusion(ref: dict, lr: dict) -> tuple[str, str, str]:
             )
         if ref.get("_not_a_citation"):
             return (
-                "🚫",
+                "—",
                 "Not a citation",
                 "The LLM classifier flagged this as body text, an equation, "
                 "or a caption that the PDF parser misidentified as a "
                 "bibliography entry. Excluded from the match-rate denominator.",
             )
         return (
-            "🚫",
+            "—",
             "Skipped (parser garbage)",
             "The extracted fields were too damaged for a meaningful lookup "
             "(e.g. year token as title, missing authors). Re-parse with a "
@@ -468,7 +605,7 @@ def _conclusion(ref: dict, lr: dict) -> tuple[str, str, str]:
         )
     if errored and not queried:
         return (
-            "⚠️",
+            "—",
             "Lookup failed",
             f"All sources returned errors ({', '.join(errored)}). Try again "
             f"after the rate limit window or check network connectivity.",
@@ -486,14 +623,14 @@ def _conclusion(ref: dict, lr: dict) -> tuple[str, str, str]:
             f"very recent preprints, niche workshop papers, or a garbled "
             f"extraction we couldn't repair. Verify manually if it's important.",
         )
-    return ("❓", "Pending", "No lookup has run for this reference yet.")
+    return ("⚪", "Pending", "No lookup has run for this reference yet.")
 
 
 def _per_ref_audit(n: int, ref: dict, lr: dict | None) -> str:
     title = ref.get("title") or "(no title extracted)"
     page  = ref.get("page")
     loc   = f" · p. {page}" if page else ""
-    badge = " ✏️ *user-added*" if ref.get("_user_added") else ""
+    badge = " — *user-added*" if ref.get("_user_added") else ""
 
     icon, headline, explanation = _conclusion(ref, lr or {})
 

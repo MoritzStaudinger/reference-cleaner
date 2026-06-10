@@ -70,15 +70,59 @@ function selectionPayload() {
   }
   const page = node ? parseInt(node.dataset.pageNum, 10) : state.pageNum;
 
-  const rects = Array.from(sel.getRangeAt(0).getClientRects())
-    .map(r => [r.left, r.top, r.right, r.bottom]);
+  // Convert client (browser CSS) rects → PDF native coords so the
+  // annotation overlay can paint a highlight rectangle for this
+  // selection.  Without this, the manual-ref's `rect` would be in
+  // window-relative pixels and `annotViewportRect` would produce
+  // nonsense.
+  //
+  // We take the union bounding box of all client rects (multi-line
+  // selections span several) — one tight rect per manual ref is what
+  // the rest of the pipeline expects.
+  let pageInfo = state.pageElements.find(pi => pi.pageNum === page);
+  const clientRects = Array.from(sel.getRangeAt(0).getClientRects());
+
+  // Fallback: if the anchor-node walk didn't land us on a known page
+  // (can happen when the anchor is inside whitespace, etc.), find the
+  // page by which one contains the selection's centre.  Without this
+  // fallback `pageInfo` is undefined and the highlight rect goes
+  // missing, which is exactly the "added but not highlighted" symptom.
+  if (!pageInfo && clientRects.length && state.pageElements.length) {
+    const all = clientRects[0];
+    const cx = (all.left + all.right) / 2;
+    const cy = (all.top  + all.bottom) / 2;
+    pageInfo = state.pageElements.find(pi => {
+      const r = pi.el.getBoundingClientRect();
+      return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+    }) || null;
+  }
+
+  let pdfRect = null;
+  let resolvedPage = page;
+  if (pageInfo && clientRects.length) {
+    resolvedPage = pageInfo.pageNum;   // trust the geometric lookup
+    const pageElRect = pageInfo.el.getBoundingClientRect();
+    let cssL = Infinity, cssT = Infinity, cssR = -Infinity, cssB = -Infinity;
+    for (const r of clientRects) {
+      cssL = Math.min(cssL, r.left - pageElRect.left);
+      cssT = Math.min(cssT, r.top  - pageElRect.top);
+      cssR = Math.max(cssR, r.right - pageElRect.left);
+      cssB = Math.max(cssB, r.bottom - pageElRect.top);
+    }
+    // viewport CSS (top-down y) → PDF native (bottom-up y).
+    // Pass the two diagonal corners; annotViewportRect will normalise.
+    const [px0, py0] = pageInfo.viewport.convertToPdfPoint(cssL, cssB);
+    const [px1, py1] = pageInfo.viewport.convertToPdfPoint(cssR, cssT);
+    pdfRect = [px0, py0, px1, py1];
+  }
 
   state.selectionCounter += 1;
   return {
     kind: "selection",
     text: text,
-    page: page,
-    rects: rects,
+    page: resolvedPage,
+    rect: pdfRect,    // PDF native coords; consumed by _attach_manual_rects
+    rects: clientRects.map(r => [r.left, r.top, r.right, r.bottom]),
     id: `sel-${Date.now()}-${state.selectionCounter}`,
   };
 }
@@ -96,26 +140,45 @@ function emitPageChange() {
   });
 }
 
-function paintTextLayer(textContent, viewport, container, pdfjs) {
+async function paintTextLayer(textContent, viewport, container, pdfjs) {
+  // Use PDF.js's official TextLayer class.  Earlier versions of v4 had
+  // bugs that made us write a manual painter, but those are fixed in
+  // v4.0.379 (the version we pin).  The official painter does what our
+  // manual version couldn't:
+  //   - Sizes each <span> to the actual canvas-rendered width via a
+  //     per-span `transform: scaleX(...)`, so spans never overlap
+  //     neighbouring words.
+  //   - Picks a font that matches the PDF's character widths rather than
+  //     a fixed `sans-serif` (which was much wider than the typical
+  //     serif PDF fonts and made selection feel "off by a word").
+  //   - Handles rotation, RTL text, and ligatures correctly.
+  if (pdfjs.TextLayer) {
+    // v4.x API: construct + render.  textContentSource accepts either
+    // the resolved textContent object or a Promise.
+    const tl = new pdfjs.TextLayer({
+      textContentSource: textContent,
+      container:         container,
+      viewport:          viewport,
+    });
+    await tl.render();
+    return;
+  }
+  // Last-resort fallback for older PDF.js versions — keeps the
+  // component working but with the imperfect manual painter.  Should
+  // never fire on pinned v4.0.379.
   const items = textContent.items || [];
   for (const item of items) {
     if (!item.str || item.str === "") continue;
     const tx = pdfjs.Util.transform(viewport.transform, item.transform);
     const fontHeight = Math.hypot(tx[2], tx[3]);
     if (fontHeight < 0.5) continue;
-    const angle = Math.atan2(tx[1], tx[0]);
-
     const span = document.createElement("span");
-    span.textContent = item.str;
+    span.textContent       = item.str;
     span.style.position    = "absolute";
     span.style.left        = `${tx[4]}px`;
     span.style.top         = `${tx[5] - fontHeight}px`;
     span.style.fontSize    = `${fontHeight}px`;
-    span.style.fontFamily  = "sans-serif";
-    span.style.transformOrigin = "0% 0%";
-    if (Math.abs(angle) > 1e-6) {
-      span.style.transform = `rotate(${angle}rad)`;
-    }
+    span.style.fontFamily  = "serif";
     container.appendChild(span);
   }
 }
@@ -244,17 +307,32 @@ async function renderAllPages() {
     pageEl.appendChild(textLayer);
 
     const textContent = await page.getTextContent();
-    paintTextLayer(textContent, viewport, textLayer, pdfjs);
+    await paintTextLayer(textContent, viewport, textLayer, pdfjs);
 
     // Click hit-test against the page's annotation rectangles.
-    // `click` only fires for a real (non-drag) click — drag selections
-    // do NOT trigger it, so this co-exists with text selection.
+    // Some browsers fire `click` even after a small mouse movement,
+    // and `mouseup` on the text layer can confuse this with a drag-
+    // select that happens to start near a highlight.  Track mousedown
+    // → mouseup distance and only treat it as a click if the user
+    // didn't move (< 4 px).  This makes selection within a highlighted
+    // ref reliable without losing the click-to-focus affordance.
+    let _mouseDownPos = null;
+    pageEl.addEventListener("mousedown", (e) => {
+      _mouseDownPos = { x: e.clientX, y: e.clientY };
+    });
     pageEl.addEventListener("click", (e) => {
-      // Compute click position in page-local CSS pixels
+      if (_mouseDownPos) {
+        const dx = e.clientX - _mouseDownPos.x;
+        const dy = e.clientY - _mouseDownPos.y;
+        if (dx * dx + dy * dy > 16) {   // moved > 4 px → it was a drag
+          _mouseDownPos = null;
+          return;
+        }
+      }
+      _mouseDownPos = null;
       const pageRect = pageEl.getBoundingClientRect();
       const x = e.clientX - pageRect.left;
       const y = e.clientY - pageRect.top;
-      // Find a clickable annotation that contains this point
       for (const a of (state.annotations || [])) {
         if (a.page !== n || typeof a.ref_index !== "number") continue;
         const r = annotViewportRect(a, viewport);
@@ -372,14 +450,35 @@ async function loadPdf(pdfBytes, annotations, scrollToTarget) {
     return;
   }
 
-  // Slow path: new PDF.
+  // Slow path: new PDF.  Re-rendering all pages naturally resets scroll
+  // to the top.  When the caller didn't ask for an explicit scroll
+  // target, that reset is a visible jolt for the user — they were
+  // reading at page N, the script silently re-ran (e.g. they clicked
+  // an annotation, which causes a Python rerun that recomputes the
+  // annotated PDF bytes), and the view snaps back to page 1.
+  //
+  // Capture the scroll position *before* the slow re-render, then
+  // restore it after layout settles when no explicit target was given.
+  const wrap = document.getElementById("pages-wrap");
+  const prevScrollTop = wrap ? wrap.scrollTop : 0;
+  const prevPageNum   = state.pageNum || 1;
+
   const pdfjs = await loadPdfJs();
   state.pdfHash         = newHash;
   state.pdfDoc          = await pdfjs.getDocument({ data: pdfBytes }).promise;
   state.totalPages      = state.pdfDoc.numPages;
   state.pendingScrollToPage = scrollToTarget || null;
-  state.pageNum         = scrollToTarget || 1;
+  state.pageNum         = scrollToTarget || prevPageNum || 1;
   await renderAllPages();
+
+  // Restore scroll position when no explicit target was requested.
+  // `renderAllPages` already handles `pendingScrollToPage`, so we only
+  // step in when the caller is silent about scrolling.
+  if (!scrollToTarget && wrap && prevScrollTop > 0) {
+    requestAnimationFrame(() => {
+      wrap.scrollTop = prevScrollTop;
+    });
+  }
 }
 
 function setupNavButtons() {
@@ -446,24 +545,102 @@ function setupSelectionWatcher() {
   });
 }
 
-let _lastRenderKey = null;
+let _lastPdfKey       = null;     // PDF-bytes identity (length)
+let _lastAnnotKey     = null;     // serialised annotations
+let _deferredRender   = null;     // args from a render deferred during selection
+let _selectingTimeout = null;     // safety reset for stuck isSelecting
+
+// `isSelecting` gates re-renders while the user is dragging a text
+// selection — re-rendering mid-drag rebuilds the text-layer spans and
+// destroys the selection range.  Three ways the flag gets cleared, so
+// it can't stay stuck even if the user drags out of the window:
+//
+//   1. mouseup anywhere on document  (normal case)
+//   2. selectionchange → collapsed   (selection was released; covers
+//                                     the "released outside the window"
+//                                     edge case where mouseup never
+//                                     fires on document)
+//   3. 1.5s safety timeout           (last-resort heal — drops the flag
+//                                     even if both 1 and 2 are missed)
+//
+// Used to be just (1), which is why renders would silently stop
+// updating after a drag-out-of-window.
+
+function _clearSelecting() {
+  state.isSelecting = false;
+  if (_selectingTimeout) {
+    clearTimeout(_selectingTimeout);
+    _selectingTimeout = null;
+  }
+  // Flush any render that was queued while the flag was set
+  if (_deferredRender) {
+    const ev = _deferredRender;
+    _deferredRender = null;
+    onRender(ev);
+  }
+}
+
+(function () {
+  const wrap = document.getElementById("pages-wrap");
+  if (!wrap) return;
+  wrap.addEventListener("mousedown", () => {
+    state.isSelecting = true;
+    if (_selectingTimeout) clearTimeout(_selectingTimeout);
+    // Heal-after-1.5s: if we somehow miss both mouseup AND the
+    // selectionchange→collapsed signal, drop the flag anyway so the
+    // viewer doesn't go silent.  Real drags rarely take longer than
+    // half a second; 1.5s is a comfortable cushion.
+    _selectingTimeout = setTimeout(_clearSelecting, 1500);
+  });
+  document.addEventListener("mouseup", _clearSelecting);
+  document.addEventListener("selectionchange", () => {
+    // If the selection has collapsed (user clicked away / released
+    // outside the window), the drag is over even if we never saw the
+    // mouseup event.
+    const sel = window.getSelection();
+    if (sel && sel.isCollapsed && state.isSelecting) {
+      _clearSelecting();
+    }
+  });
+})();
+
 function onRender(event) {
   const args = event.detail.args || {};
   // Always update the emit flag — it controls JS-side behaviour for
   // page-change emissions and doesn't itself require a re-render.
   state.emitPageChanges = !!args.emit_page_changes;
 
-  // Skip the render entirely if nothing meaningful changed.  Streamlit
-  // can re-fire RENDER_EVENT after harmless reruns (e.g. page-change
-  // round-trip); we don't want to interrupt the user's scroll.
-  const key = JSON.stringify({
-    p: (args.pdf_b64 || "").length,        // PDF identity proxy
-    a: args.annotations || [],             // overlay rectangles
-    s: args.scroll_to_page || null,        // explicit scroll target
-    e: !!args.emit_page_changes,           // sync mode
-  });
-  if (key === _lastRenderKey) return;
-  _lastRenderKey = key;
+  // Defer renders only when the user is actively dragging.  When they
+  // release, the queued render fires.
+  if (state.isSelecting) {
+    _deferredRender = event;
+    return;
+  }
+
+  // SPLIT the dedup logic.  PDF-bytes identity and annotation content
+  // are tracked independently:
+  //
+  //   pdfKey   — if unchanged, we can take the JS fast path (no
+  //              renderAllPages, just repaint annotations + maybe scroll)
+  //   annotKey — if unchanged, we can skip even repaintAnnotationsOnly
+  //
+  // The previous version OR'd both into one hash and a single skip,
+  // which meant Streamlit reruns that fired with identical annotations
+  // would silently skip — fine in the common case, but if the JS
+  // already had stale annotations drawn (e.g. from a deferred render
+  // that got lost), the skip prevented recovery.  Splitting lets the
+  // annotation-only path always run when there's a change, while the
+  // expensive PDF reload still gets the skip optimisation.
+  const pdfKey   = (args.pdf_b64 || "").length;
+  const annotKey = JSON.stringify(args.annotations || []);
+  const pdfUnchanged   = pdfKey   === _lastPdfKey;
+  const annotUnchanged = annotKey === _lastAnnotKey;
+  if (pdfUnchanged && annotUnchanged && !args.scroll_to_page) {
+    // Truly nothing to do.
+    return;
+  }
+  _lastPdfKey   = pdfKey;
+  _lastAnnotKey = annotKey;
 
   const pdfBytes = b64ToBytes(args.pdf_b64 || "");
   const annotations = args.annotations || [];

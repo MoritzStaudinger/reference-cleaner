@@ -1,6 +1,40 @@
+# Secrets
 .env
+.env.*
+!.env.example
+
+# Local runtime data — SQLite caches, downloaded indexes, uploads
+data/
+
+# Benchmark data and runs — research artefacts kept out of the public repo.
+# The harness scripts themselves remain tracked (benchmark/*.py, run_all.sh).
+benchmark/runs/
+benchmark/pdfs/
+benchmark/smoke_results.json
+
+# Institutional cert bundle (NEVER commit)
+nginx/certs/*.pem
+nginx/certs/*.crt
+nginx/certs/*.key
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Editor / IDE
 .idea/
-benchmark/
-data/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Claude Code session state
+.claude/

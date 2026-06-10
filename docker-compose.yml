@@ -1,15 +1,84 @@
+# ARES — Automatic Reference Explainer and Scanner
+# Deployment target: reference-cleaner.ds-ifs.tuwien.ac.at
+#
+# TLS via an institutional cert (TU Wien-issued PEM bundle) — no
+# certbot, no Let's Encrypt.  The cert + key live on the host under
+# ./nginx/certs/ and are bind-mounted into the nginx container.
+#
+# Only nginx is exposed on the host network (ports 80 + 443).  The
+# ares and grobid containers talk over the compose-internal network.
+#
+# First-time setup on the VM:
+#   1. Place the institutional cert files at:
+#        ./nginx/certs/fullchain.pem   (cert + intermediate chain)
+#        ./nginx/certs/privkey.pem     (private key, mode 600)
+#      If the institutional bundle uses different filenames
+#      (e.g. `.crt` + `.key`), either rename them here or update the
+#      paths in nginx/conf.d/default.conf to match.
+#   2. Copy .env next to this file (NEVER commit — it carries API keys).
+#   3. docker compose up -d --build
+#
+# Cert renewal: when TU Wien issues a refreshed bundle, overwrite the
+# two files in ./nginx/certs/ and run `docker compose restart nginx`.
+
 services:
+
   grobid:
     image: lfoppiano/grobid:0.8.1
-    ports:
-      - "8070:8070"
+    container_name: ares-grobid
+    restart: unless-stopped
     mem_limit: 8g
     environment:
       - JAVA_OPTS=-Xmx6g
-    restart: unless-stopped
+    # No host port — only the ares service talks to grobid via the
+    # internal `grobid` hostname.  Add `ports: ["8070:8070"]` back if
+    # you need host access for debugging.
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8070/api/isalive"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8070/api/isalive"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  ares:
+    build: .
+    image: ares:latest
+    container_name: ares-app
+    restart: unless-stopped
+    depends_on:
+      grobid:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # In-container service discovery — overrides any GROBID_URL in .env
+      - GROBID_URL=http://grobid:8070
+      - ARES_CACHE=/app/data/cache.sqlite
+      # Streamlit behind a reverse proxy
+      - STREAMLIT_SERVER_ENABLE_CORS=false
+      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
+    volumes:
+      # SQLite cache + temp uploads persist across container restarts.
+      # ~3 GB after a full HalluCitation benchmark run.
+      - ares-data:/app/data
+    mem_limit: 4g
+    # No host port — nginx reaches the container via `ares:8501` on the
+    # compose network.
+
+  nginx:
+    image: nginx:latest
+    container_name: ares-nginx
+    restart: unless-stopped
+    depends_on:
+      - ares
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # Institutional cert + key, mounted read-only so a misbehaving
+      # nginx process can't ever touch them.
+      - ./nginx/certs:/etc/nginx/certs:ro
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  ares-data:

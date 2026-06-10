@@ -20,8 +20,7 @@ from highlighter import highlight_references
 from lookup import lookup_all
 
 st.set_page_config(
-    page_title="Reference Cleaner",
-    page_icon="📚",
+    page_title="ARES",
     layout="wide",
 )
 
@@ -30,71 +29,140 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
-/* Reference cards */
-.ref-card {
-    border-left: 5px solid;
-    border-radius: 4px;
-    padding: 10px 14px;
-    margin: 6px 0 2px 0;
-    font-family: sans-serif;
-    font-size: 0.9em;
+/* ---- Typography ---- */
+html, body, [class*="css"] {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter",
+                 "Helvetica Neue", Arial, sans-serif;
 }
-.ref-card.match   { border-color: #28a745; background: rgba(40,  167,  69, 0.08); }
-.ref-card.mismatch{ border-color: #dc3545; background: rgba(220,  53,  69, 0.08); }
-.ref-card.missing { border-color: #e6a817; background: rgba(255, 193,   7, 0.08); }
-.ref-card.pending { border-color: #868e96; background: rgba(108, 117, 125, 0.06); }
+h1, h2, h3, h4 {
+    letter-spacing: -0.01em;
+    color: #1f2933;
+}
+.stApp h1 { font-weight: 600; font-size: 1.85rem; }
+
+/* ---- Reference cards ---- */
+.ref-card {
+    border-left: 3px solid;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 6px 0 4px 0;
+    font-size: 0.92em;
+    background: #ffffff;
+    transition: box-shadow 0.15s ease;
+}
+.ref-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.ref-card.match    { border-color: #2f9e44; background: #f4faf5; }
+.ref-card.mismatch { border-color: #c92a2a; background: #fdf4f4; }
+.ref-card.missing  { border-color: #f08c00; background: #fff9ef; }
+.ref-card.pending  { border-color: #adb5bd; background: #fafbfc; }
 
 .ref-card summary {
     cursor: pointer;
-    font-weight: 600;
-    font-size: 1em;
-    list-style: none;         /* hide default arrow in Firefox */
+    font-weight: 500;
+    font-size: 0.98em;
+    color: #1f2933;
+    list-style: none;
+    padding: 2px 0;
 }
 .ref-card summary::-webkit-details-marker { display: none; }
 .ref-card summary::before {
-    content: "▶ ";
-    font-size: 0.7em;
-    vertical-align: middle;
+    content: "›";
+    display: inline-block;
+    width: 14px;
+    color: #6c757d;
+    transition: transform 0.15s ease;
+    font-weight: 600;
 }
-details[open] > summary::before { content: "▼ "; }
+details[open] > summary::before { transform: rotate(90deg); }
+.ref-card summary small { color: #6c757d; font-weight: 400; }
 
 .ref-raw {
-    background: rgba(0,0,0,0.06);
-    border-radius: 3px;
-    padding: 6px 8px;
-    font-family: monospace;
+    background: #f6f7f9;
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     font-size: 0.82em;
+    line-height: 1.45;
     white-space: pre-wrap;
     word-break: break-word;
-    margin-top: 8px;
+    margin-top: 10px;
+    color: #495057;
 }
 .ref-fields {
-    margin-top: 6px;
+    margin-top: 10px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2px 12px;
+    gap: 3px 14px;
     font-size: 0.88em;
+    color: #343a40;
 }
+.ref-fields b { color: #6c757d; font-weight: 500; }
+
 .ref-lookup {
-    margin-top: 8px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(128,128,128,0.2);
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #e9ecef;
     font-size: 0.88em;
 }
-.ref-lookup ul { margin: 4px 0 0 0; padding-left: 18px; }
-.ref-lookup li { margin: 2px 0; }
-.ref-lookup a  { color: inherit; }
-/* tighten up the Go-to button */
-div[data-testid="stButton"] > button[kind="secondary"] {
-    padding: 2px 10px;
-    font-size: 0.8em;
-    margin-bottom: 10px;
+.ref-lookup > b {
+    display: block;
+    color: #6c757d;
+    font-weight: 500;
+    margin-bottom: 4px;
+    font-size: 0.86em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
+.ref-lookup ul { margin: 4px 0 0 0; padding-left: 22px; }
+.ref-lookup li { margin: 3px 0; line-height: 1.5; }
+.ref-lookup a  { color: #1c7ed6; text-decoration: none; }
+.ref-lookup a:hover { text-decoration: underline; }
+
+/* ---- Buttons ---- */
+div[data-testid="stButton"] > button[kind="secondary"] {
+    padding: 3px 12px;
+    font-size: 0.82em;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+div[data-testid="stButton"] > button[kind="primary"] {
+    border-radius: 4px;
+}
+
+/* ---- Sidebar nav: hide Streamlit's default filename-derived nav ----
+   It shows "app" and "About" without us being able to relabel the
+   entry file.  We render our own clean links via st.page_link below. */
+[data-testid="stSidebarNav"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📚 Reference Cleaner")
-st.caption("Upload a PDF to extract and validate its references.")
+# Custom sidebar navigation — clean labels instead of Streamlit's
+# filename-derived ones.  `st.page_link` highlights the active page
+# automatically, so this functions as a normal multi-page nav.
+with st.sidebar:
+    st.page_link("app.py",          label="Validate a PDF")
+    st.page_link("pages/About.py",  label="About")
+    st.divider()
+
+st.title("ARES")
+st.caption(
+    "Automatic Reference Explainer and Scanner — "
+    "upload a PDF to extract and validate its references."
+)
+
+# Prominent reminder that this tool's output is advisory, not authoritative.
+# False positives (real references the pipeline can't find in its indexes)
+# and false negatives (fabrications that happen to share a title with a
+# real paper) both occur — every flagged citation needs human review.
+st.warning(
+    "**Human review is required.** This tool surfaces *candidates* for "
+    "review — it does not make final judgements. References flagged as "
+    "wrong or missing are starting points for human verification, not "
+    "verdicts. References marked verified can still be wrong; databases "
+    "are incomplete and similarity-matching has limits. Always confirm "
+    "the original source before acting on any result.",
+    icon=None,
+)
 
 # ---------------------------------------------------------------------------
 # Sidebar
@@ -109,7 +177,18 @@ _LLM_MODEL             = os.getenv("LLM_MODEL") or (
 )
 _GROBID_AVAILABLE = grobid_is_available()
 
-_PARSER_OPTIONS = ["pymupdf4llm", "docling"]
+# docling's import cost is non-trivial (loads torch eagerly) but cheaper
+# than discovering it's missing only when the parser is selected.  When
+# docling isn't installed the dropdown option is hidden entirely.
+try:
+    import docling  # noqa: F401
+    _DOCLING_AVAILABLE = True
+except ImportError:
+    _DOCLING_AVAILABLE = False
+
+_PARSER_OPTIONS = ["pymupdf4llm"]
+if _DOCLING_AVAILABLE:
+    _PARSER_OPTIONS.append("docling")
 _PARSER_HELP = {
     "hybrid":      "Best quality (recommended). Merges GROBID's full-doc parse "
                    "with pymupdf-located section refs structured by GROBID's "
@@ -133,7 +212,7 @@ with st.sidebar:
         help=" | ".join(f"**{k}**: {v}" for k, v in _PARSER_HELP.items() if k in _PARSER_OPTIONS),
     )
     if not _GROBID_AVAILABLE:
-        st.caption("💡 Run `docker compose up -d grobid` to unlock `grobid` / `hybrid`.")
+        st.caption("Run `docker compose up -d grobid` to unlock `grobid` / `hybrid`.")
 
     _llm_label = (
         f"Enhance with LLM ({_LLM_MODEL} via {_LLM_BACKEND})"
@@ -150,6 +229,20 @@ with st.sidebar:
             f"**{_LLM_BACKEND}** / **{_LLM_MODEL}**."
             if _LLM_KEY_PRESENT
             else "Set ANTHROPIC_API_KEY (paid) or AQUEDUCT_API_KEY (free) in .env."
+        ),
+    )
+    use_scholar = st.checkbox(
+        "Use Google Scholar fallback (slow)",
+        value=False,
+        help=(
+            "When a reference isn't found in any academic database "
+            "(S2, OpenAlex, DBLP, Crossref, arXiv), Phase 5 falls back "
+            "to Google Scholar.  GS has the broadest coverage (blog "
+            "posts, theses, workshop papers, books) but no API: each "
+            "lookup scrapes the GS web page and is rate-limited to one "
+            "every 2.5 s.  For ~10 unmatched refs that's ~1-2 min of "
+            "wait time.  Leave OFF for fast runs; enable when you want "
+            "maximum coverage."
         ),
     )
     show_debug = st.checkbox("Show raw markdown (debug)", value=False)
@@ -217,15 +310,23 @@ if st.session_state.get("manual_refs_file") != file_id:
     st.session_state.manual_refs_file = file_id
 
 # --- Sidebar: add a reference the parser missed --------------------------
+# Keep the expander open whenever there are manual refs to manage.  Without
+# this, `st.rerun()` (called after add / remove) re-renders the expander
+# from scratch, which always starts closed — surprising for the user who
+# is mid-edit on the manual-ref list.
 with st.sidebar:
-    with st.expander(f"✏️ Add a missed reference ({len(st.session_state.manual_refs)})"):
+    _expander_open = bool(st.session_state.manual_refs)
+    with st.expander(
+        f"Add a missed reference ({len(st.session_state.manual_refs)})",
+        expanded=_expander_open,
+    ):
         manual_text = st.text_area(
             "Paste the citation text",
             placeholder="e.g. John Hewitt and Christopher D. Manning. 2019. A structural probe for finding syntax in word representations. NAACL.",
             height=110,
             key="manual_ref_input",
         )
-        if st.button("➕ Add to references", disabled=not manual_text.strip()):
+        if st.button("Add to references", disabled=not manual_text.strip()):
             from parsers import _grobid_process_citation_list
             try:
                 parsed = _grobid_process_citation_list([manual_text.strip()])
@@ -233,9 +334,7 @@ with st.sidebar:
                     new_ref = dict(parsed[0])
                     new_ref["_user_added"] = True
                     new_ref["raw"] = manual_text.strip()
-                    st.session_state.manual_refs.append(new_ref)
-                    # Invalidate lookup cache so the new ref gets queried.
-                    st.session_state.lookup_results = None
+                    _append_manual_ref(new_ref)
                     st.success(
                         f"Added: {(new_ref.get('title') or manual_text.strip())[:70]}"
                     )
@@ -248,15 +347,30 @@ with st.sidebar:
 
         if st.session_state.manual_refs:
             st.divider()
-            st.caption("Manually added (click ✕ to remove):")
+            st.caption("Manually added (click × to remove):")
             for i, mr in enumerate(list(st.session_state.manual_refs)):
                 cols = st.columns([10, 1])
                 cols[0].markdown(
                     f"**{i+1}.** {(mr.get('title') or mr.get('raw') or '')[:80]}"
                 )
-                if cols[1].button("✕", key=f"rm_manual_{i}", help="Remove"):
+                if cols[1].button("×", key=f"rm_manual_{i}", help="Remove"):
+                    # Manual ref is appended to the parsed list at index
+                    # (len(parsed) + i).  We don't know `parsed` length
+                    # here without re-running the pipeline, but lookup
+                    # results align by index so the simplest correct
+                    # action is to drop the trailing slot — the manual
+                    # ref to remove is always the last block in the list,
+                    # at offset (len(lookup_results) - len(manual_refs) + i).
                     st.session_state.manual_refs.pop(i)
-                    st.session_state.lookup_results = None
+                    lr = st.session_state.get("lookup_results")
+                    if isinstance(lr, list) and len(lr) > 0:
+                        # The deleted manual ref's slot is at the
+                        # parsed-refs-tail position; remove it so the
+                        # remaining slots stay index-aligned with the
+                        # (now shorter) ref list.
+                        manual_offset = len(lr) - 1 - (len(st.session_state.manual_refs) - i)
+                        if 0 <= manual_offset < len(lr):
+                            lr.pop(manual_offset)
                     st.rerun()
 
 # --- Multi-stage processing with visible progress ------------------------
@@ -267,22 +381,125 @@ with st.sidebar:
 # so re-displaying the status block with "0.0s" timings is noise.
 import time as _time
 
-_processed_key = (file_id, parser, use_llm, len(st.session_state.manual_refs))
+_processed_key = (file_id, parser, use_llm)   # manual_refs intentionally excluded
 _already_processed = (st.session_state.get("processed_key") == _processed_key)
+
+
+@st.cache_data(show_spinner=False)
+def _find_manual_ref_rect(_pdf_bytes: bytes, raw: str, page_hint: int | None):
+    """Locate a manual-ref's bounding rect in the PDF by fuzzy-matching
+    its raw text against text blocks on the hinted page (or any page).
+
+    Used as a fallback when the JS-side selection didn't carry a PDF
+    rect (e.g. the anchor node walk landed off-page).  Returns
+    ``(rect_in_pdf_coords, page_1based) | (None, None)``.
+
+    Cached on (pdf_bytes, raw, page_hint), so repeated reruns are free.
+    """
+    import fitz
+    from rapidfuzz import fuzz as _fuzz
+    from highlighter import _clean_for_search
+
+    needle = _clean_for_search(raw or "").lower()
+    if len(needle) < 15:
+        return None, None
+
+    doc = fitz.open(stream=_pdf_bytes, filetype="pdf")
+    try:
+        page_indices = ([page_hint - 1] if page_hint
+                        else range(len(doc)))
+        best_rect = None
+        best_page = None
+        best_score = 0
+        for pn in page_indices:
+            if pn < 0 or pn >= len(doc):
+                continue
+            page = doc[pn]
+            for b in page.get_text("blocks"):
+                if len(b) < 5:
+                    continue
+                text = (b[4] or "").strip()
+                if len(text) < 30:
+                    continue
+                norm = _clean_for_search(text).lower()
+                score = _fuzz.partial_ratio(needle, norm)
+                if score > best_score:
+                    best_score = score
+                    if score >= 75:
+                        page_h = page.rect.height
+                        # PyMuPDF top-down y → PDF native bottom-up y,
+                        # matching the convention used elsewhere.
+                        best_rect = [
+                            b[0],
+                            page_h - b[3],
+                            b[2],
+                            page_h - b[1],
+                        ]
+                        best_page = pn + 1
+        return best_rect, best_page
+    finally:
+        doc.close()
+
+
+def _attach_manual_rects(manual_refs):
+    """Convert each user-added ref into the shape highlighter returns:
+    flag found=True/False, attach rect/page from the PDF selection that
+    created it.  This avoids re-running run_highlighter on every manual
+    add (which would invalidate the annotated_pdf cache and re-render
+    the whole PDF in the browser).
+
+    The rect comes from the JS selection payload in PDF native coords
+    (computed in selectionPayload via viewport.convertToPdfPoint).
+    When that's missing (older payloads, anchor-node lookup failed),
+    we fall back to text-search via ``_find_manual_ref_rect``, so the
+    user still sees a highlight rectangle for the ref.
+    """
+    out = []
+    for mr in manual_refs:
+        entry = dict(mr)
+        rect = mr.get("rect")
+        page = mr.get("page")
+        if not rect:
+            # Fallback: locate the ref by fuzzy text-matching its raw
+            # against PDF blocks.  Cached, so it only does the work
+            # once per (pdf, raw, page) combination.
+            fb_rect, fb_page = _find_manual_ref_rect(
+                pdf_bytes, mr.get("raw") or "", page)
+            if fb_rect:
+                rect = fb_rect
+                page = fb_page or page
+        if rect:
+            entry["rect"]   = rect
+            entry["found"]  = True
+            entry["page"]   = page
+            entry["status"] = "pending"
+        else:
+            entry["found"]  = False
+            entry["page"]   = page
+        out.append(entry)
+    return out
 
 
 def _silent_process():
     """Run the full processing pipeline without a status block.  Used on
-    subsequent reruns when results are already cached."""
+    subsequent reruns when results are already cached.
+
+    Manual refs are NOT passed to run_highlighter — instead we attach
+    their rectangles (from the original PDF text-selection event) here.
+    This keeps `annotated_pdf` bytes stable across manual-ref adds, so
+    the JS-side fast path (PDF hash unchanged → just repaint annotation
+    overlay) fires and the PDF doesn't jump."""
     references, debug_md = run_parser(pdf_bytes, parser)
     if use_llm:
         refs_json = run_llm_enhancement(json.dumps(references), _LLM_BACKEND, _LLM_MODEL)
         references = json.loads(refs_json)
-    if st.session_state.manual_refs:
-        references = list(references) + list(st.session_state.manual_refs)
     references, _ = dedupe_references(references)
-    annotated_pdf, enriched_refs, orphan_blocks = run_highlighter(
+    annotated_pdf, parsed_enriched, orphan_blocks = run_highlighter(
         pdf_bytes, json.dumps(references))
+    # Manual refs ride along with their own rects — no PDF re-bake.
+    enriched_refs = list(parsed_enriched) + _attach_manual_rects(
+        st.session_state.manual_refs)
+    references = list(references) + list(st.session_state.manual_refs)
     return references, debug_md, annotated_pdf, enriched_refs, orphan_blocks
 
 
@@ -300,18 +517,18 @@ else:
     with st.status("Processing paper …", expanded=True) as _stage:
         # Stage 1 — Parse
         _t = _time.time()
-        st.write(f"📄 **Parsing references** with `{parser}` …")
+        st.write(f"**Parsing references** with `{parser}` …")
         references, debug_md = run_parser(pdf_bytes, parser)
         _stage_t = _time.time() - _t
         if not references:
-            st.write("   ✗ No references could be extracted")
-            _stage.update(label="❌ No references found", state="error", expanded=True)
+            st.write("   No references could be extracted")
+            _stage.update(label="No references found", state="error", expanded=True)
             st.warning(
                 "No references could be extracted. Enable **Show raw markdown** "
                 "in the sidebar to inspect the parser output."
             )
             st.stop()
-        st.write(f"   ✓ Extracted **{len(references)} references** in {_stage_t:.1f}s")
+        st.write(f"   Extracted **{len(references)} references** in {_stage_t:.1f}s")
 
         if show_debug:
             debug_lang = "xml" if parser == "grobid" else "markdown"
@@ -322,34 +539,39 @@ else:
         # Stage 2 — LLM repair (optional)
         if use_llm:
             _t = _time.time()
-            st.write(f"🧠 **LLM repair** via `{_LLM_MODEL}` ({_LLM_BACKEND}) …")
+            st.write(f"**LLM repair** via `{_LLM_MODEL}` ({_LLM_BACKEND}) …")
             refs_json = run_llm_enhancement(json.dumps(references), _LLM_BACKEND, _LLM_MODEL)
             references = json.loads(refs_json)
-            st.write(f"   ✓ Repaired in {_time.time() - _t:.1f}s")
+            st.write(f"   Repaired in {_time.time() - _t:.1f}s")
 
-        # User-added refs go in after LLM repair (they're already citation-form)
+        # Dedupe near-duplicate parsed refs (manual refs are NOT included
+        # here — they're appended after highlighting so adding one doesn't
+        # invalidate the annotated_pdf cache).
+        references, n_merged = dedupe_references(references)
+        if n_merged:
+            st.write(f"   Merged **{n_merged}** duplicate reference{'s' if n_merged != 1 else ''}")
+
+        # Stage 3 — Locate parsed refs in PDF + initial highlight
+        _t = _time.time()
+        st.write("**Locating references in the PDF** …")
+        annotated_pdf, parsed_enriched, orphan_blocks = run_highlighter(pdf_bytes, json.dumps(references))
+
+        # Manual refs ride along with rects from the original PDF
+        # selection event — no PDF re-bake needed.
+        enriched_refs = list(parsed_enriched) + _attach_manual_rects(
+            st.session_state.manual_refs)
         if st.session_state.manual_refs:
             n_manual = len(st.session_state.manual_refs)
             references = list(references) + list(st.session_state.manual_refs)
-            st.write(f"   ➕ Including **{n_manual}** user-added reference{'s' if n_manual != 1 else ''}")
-
-        # Dedupe near-duplicate refs
-        references, n_merged = dedupe_references(references)
-        if n_merged:
-            st.write(f"   🪡 Merged **{n_merged}** duplicate reference{'s' if n_merged != 1 else ''}")
-
-        # Stage 3 — Locate in PDF + initial highlight
-        _t = _time.time()
-        st.write("🎨 **Locating references in the PDF** …")
-        annotated_pdf, enriched_refs, orphan_blocks = run_highlighter(pdf_bytes, json.dumps(references))
+            st.write(f"   Including **{n_manual}** user-added reference{'s' if n_manual != 1 else ''}")
         n_found = sum(1 for e in enriched_refs if e.get("found"))
-        st.write(f"   ✓ Located **{n_found} / {len(enriched_refs)}** in {_time.time() - _t:.1f}s")
+        st.write(f"   Located **{n_found} / {len(enriched_refs)}** in {_time.time() - _t:.1f}s")
         if orphan_blocks:
-            st.write(f"   📋 Found **{len(orphan_blocks)}** possible missed reference(s) "
+            st.write(f"   Found **{len(orphan_blocks)}** possible missed reference(s) "
                      f"in the bibliography region — see panel below the PDF")
 
         _stage.update(
-            label=f"✓ Ready — {len(references)} refs, {n_found} located in PDF "
+            label=f"Ready — {len(references)} refs, {n_found} located in PDF "
                   f"({_time.time() - _t_total:.1f}s)",
             state="complete",
             expanded=False,
@@ -368,11 +590,29 @@ if st.session_state.get("lookup_file") != file_id:
 if "selected_ref" not in st.session_state:
     st.session_state.selected_ref = None
 
+
+def _append_manual_ref(new_ref: dict) -> None:
+    """
+    Add a user-supplied reference WITHOUT wiping existing lookup results.
+
+    The previous behaviour set `lookup_results = None` which forced the
+    user to re-run every API call after each manual add — extremely
+    expensive and visually disruptive.  Instead we append a placeholder
+    None slot so `lookup_results` stays index-aligned with the (now
+    extended) ref list; the next "Look up references" run only fills
+    pending slots, and the audit cards for the new ref simply show
+    "pending" until then.
+    """
+    st.session_state.manual_refs.append(new_ref)
+    lr = st.session_state.get("lookup_results")
+    if isinstance(lr, list):
+        lr.append(None)   # placeholder; _overall_status(None) → "pending"
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-_VALIDATION_SOURCES = ("semantic_scholar", "acl_anthology", "dblp", "openalex", "crossref", "openlibrary", "scholarly", "arxiv")
+_VALIDATION_SOURCES = ("doi_org", "semantic_scholar", "acl_anthology", "dblp", "openalex", "crossref", "openlibrary", "scholarly", "arxiv")
 
 
 def _overall_status(lr: dict | None) -> str:
@@ -410,7 +650,7 @@ def _overall_status(lr: dict | None) -> str:
     return "missing"        # only fuzzy / weak results — couldn't confidently find
 
 
-STATUS_ICON = {"match": "✅", "mismatch": "❌", "missing": "🟡", "pending": "⬜"}
+STATUS_ICON = {"match": "🟢", "mismatch": "🔴", "missing": "🟡", "pending": "⚪"}
 
 
 def _status_reason(lr: dict | None) -> str:
@@ -428,7 +668,7 @@ def _status_reason(lr: dict | None) -> str:
     matches = [src for src, r in found if r.get("label") == "match"]
     if matches:
         # Friendly source names
-        nice = {"semantic_scholar": "Semantic Scholar", "openalex": "OpenAlex",
+        nice = {"doi_org": "doi.org", "semantic_scholar": "Semantic Scholar", "openalex": "OpenAlex",
                 "dblp": "DBLP", "crossref": "Crossref", "arxiv": "arXiv",
                 "scholarly": "Google Scholar", "acl_anthology": "ACL",
                 "openlibrary": "Open Library"}
@@ -460,6 +700,7 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
 
     # --- Validation sources (title + venue matching) ---
     for label, key in [
+        ("doi.org",          "doi_org"),
         ("Semantic Scholar", "semantic_scholar"),
         ("ACL Anthology",    "acl_anthology"),
         ("DBLP",             "dblp"),
@@ -481,7 +722,7 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
         sim     = r.get("similarity")
 
         # Title
-        icon    = {"match": "✅", "fuzzy": "🟡", "mismatch": "❌"}.get(r.get("label"), "❓")
+        icon    = {"match": "🟢", "fuzzy": "🟡", "mismatch": "🔴"}.get(r.get("label"), "⚪")
         url     = r.get("url", "") or ""
         # For Google Scholar, fall back to a search URL when scholarly
         # didn't return a `pub_url`.  Better to give the user *some*
@@ -499,14 +740,16 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
         # Wrong DOI warning
         if r.get("wrong_doi"):
             wrong = _html.escape(r["wrong_doi"])
-            rows.append(f'<li>⚠️ DOI in reference (<code>{wrong}</code>) points to a different paper</li>')
+            rows.append(
+                f'<li style="color:#b00020"><b>Warning:</b> DOI in reference '
+                f'(<code>{wrong}</code>) points to a different paper</li>')
 
         # Wrong arXiv ID warning — same precision tell as wrong_doi.
         if r.get("wrong_arxiv_id"):
             wrong = _html.escape(r["wrong_arxiv_id"])
             rows.append(
-                f'<li>⚠️ arXiv ID in reference (<code>arXiv:{wrong}</code>) '
-                f'points to a different paper</li>'
+                f'<li style="color:#b00020"><b>Warning:</b> arXiv ID in reference '
+                f'(<code>arXiv:{wrong}</code>) points to a different paper</li>'
             )
 
         # Authors disagree — the most reliable "wrong paper" signal when
@@ -518,7 +761,7 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
         if (asim is not None and asim < 0.35 and fa
                 and sim is not None and sim >= 0.70):
             rows.append(
-                f'<li style="margin-left:14px;opacity:.85">❗ authors: '
+                f'<li style="margin-left:14px;opacity:.85"><b>Authors:</b> '
                 f'<i>{_html.escape(fa)}</i> '
                 f'({asim:.0%} overlap with cited authors)</li>'
             )
@@ -533,9 +776,9 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
         from lookup import _is_preprint_venue
         if (fv and extracted_venue and vlabel in ("fuzzy", "mismatch")
                 and not _is_preprint_venue(extracted_venue)):
-            vicon = "🟡" if vlabel == "fuzzy" else "❌"
+            vicon = "🟡" if vlabel == "fuzzy" else "🔴"
             rows.append(
-                f'<li style="margin-left:14px;opacity:.85">{vicon} venue: '
+                f'<li style="margin-left:14px;opacity:.85">{vicon} <b>Venue:</b> '
                 f'<i>{_html.escape(fv)}</i>'
                 + (f" ({vsim:.0%})" if vsim is not None else "")
                 + "</li>"
@@ -549,7 +792,7 @@ def _lookup_rows_html(lr: dict, extracted_title: str | None, extracted_venue: st
     source_url = lr.get("_source_url", "")
     if source_url:
         rows.append(
-            f'<li>🔗 <b><a href="{_html.escape(source_url)}" target="_blank">'
+            f'<li><b><a href="{_html.escape(source_url)}" target="_blank">'
             f'Source URL</a></b></li>'
         )
 
@@ -600,11 +843,15 @@ def _render_reference(i: int, ref: dict, lr: dict | None, expanded: bool = False
 
     st.markdown(card_html, unsafe_allow_html=True)
 
-    # Interactive button must live outside the HTML block
+    # Interactive button must live outside the HTML block.
+    # NOTE: no explicit `st.rerun()` here.  The button click already
+    # triggers a rerun; calling st.rerun() forces a SECOND rerun, which
+    # snaps the browser scroll to the top of the page — the "first click
+    # scrolls up" bug.  Setting session_state is enough; the next render
+    # in the same rerun reads it via `sel_ref = ...` further down.
     if ref.get("found") and page:
         if st.button(f"Go to p. {page}", key=f"goto_{i}"):
             st.session_state.selected_ref = i
-            st.rerun()
 
 
 # ---------------------------------------------------------------------------
@@ -638,49 +885,90 @@ with col_refs:
                     lr[src] = refresh_result_against_ref(r, ref)
 
     if lookup_results is None:
-        if st.button("🔍 Look up all references", type="primary"):
+        if st.button("Look up all references", type="primary"):
             _t_lookup = _time.time()
+            # Upfront cache audit so the user sees honest expectations
+            # instead of a fake "batch pre-warming" message every time.
+            # The SQLite cache is persistent across runs, so a paper
+            # whose refs you've looked up before takes seconds, not
+            # minutes — say so clearly.
+            from lookup import count_cached_refs
+            n_cached, n_total = count_cached_refs(enriched_refs)
+            n_fresh = n_total - n_cached
             with st.status("Querying academic databases …", expanded=True) as _lk:
-                st.write("📡 **Batch pre-warming** S2, OpenAlex, arXiv (one round-trip each) …")
+                if n_cached:
+                    st.write(
+                        f"**{n_cached} / {n_total}** references already in cache. "
+                        f"**{n_fresh}** need fresh API calls."
+                    )
+                else:
+                    st.write(f"Looking up **{n_total}** references fresh "
+                             f"(no cache hits yet for this paper).")
                 progress_bar = st.progress(0.0, text="Looking up references …")
                 _done_counter = {"n": 0}
 
                 def _on_progress(done, total):
-                    if done == 1 and _done_counter["n"] == 0:
-                        st.write("🔍 **Per-reference lookups** running in parallel …")
                     _done_counter["n"] = done
                     progress_bar.progress(done / total, text=f"{done} / {total} refs")
 
-                results = lookup_all(enriched_refs, progress_cb=_on_progress)
+                # scholarly_budget=0 disables Phase 5 Google Scholar.
+                # GS is the single slowest source by far (2.5 s rate
+                # limit + 5-10 s per scrape) so we make it opt-in.
+                _gs_budget = 30 if use_scholar else 0
+                results = lookup_all(
+                    enriched_refs, progress_cb=_on_progress,
+                    scholarly_budget=_gs_budget,
+                )
                 progress_bar.empty()
                 statuses = [_overall_status(r) for r in results]
                 n_match = statuses.count("match")
                 n_miss  = statuses.count("missing")
                 n_mis   = statuses.count("mismatch")
                 st.write(
-                    f"   ✓ Done in {_time.time() - _t_lookup:.1f}s — "
+                    f"   Done in {_time.time() - _t_lookup:.1f}s — "
                     f"**{n_match}** verified · **{n_mis}** wrong · "
                     f"**{n_miss}** not found"
                 )
                 _lk.update(
-                    label=f"✓ Looked up {len(results)} references in {_time.time() - _t_lookup:.1f}s",
+                    label=f"Looked up {len(results)} references in {_time.time() - _t_lookup:.1f}s",
                     state="complete",
                     expanded=False,
                 )
             st.session_state.lookup_results = results
             st.rerun()
     else:
+        # Look for pending (None) slots — created when manual refs were
+        # added without nuking existing lookup results.  Surface a
+        # targeted button to fill just those instead of re-running
+        # every API call.
+        pending_idxs = [i for i, r in enumerate(lookup_results) if r is None]
         col_btn, col_stat = st.columns([1, 2])
         with col_btn:
-            if st.button("🔄 Re-run lookups"):
-                st.session_state.lookup_results = None
-                st.rerun()
+            if pending_idxs:
+                if st.button(f"Look up {len(pending_idxs)} new ref(s)",
+                             type="primary"):
+                    pending_refs = [enriched_refs[i] for i in pending_idxs]
+                    _gs_budget = 30 if use_scholar else 0
+                    with st.spinner(f"Looking up {len(pending_refs)} new reference(s) …"):
+                        new_results = lookup_all(
+                            pending_refs, scholarly_budget=_gs_budget,
+                        )
+                    # Splice results back into the original-index slots
+                    for slot, res in zip(pending_idxs, new_results):
+                        lookup_results[slot] = res
+                    st.session_state.lookup_results = lookup_results
+                    st.rerun()
+            else:
+                if st.button("Re-run lookups"):
+                    st.session_state.lookup_results = None
+                    st.rerun()
         with col_stat:
             statuses = [_overall_status(r) for r in lookup_results]
             st.caption(
-                f"✅ {statuses.count('match')} match · "
-                f"❌ {statuses.count('mismatch')} mismatch · "
+                f"🟢 {statuses.count('match')} match · "
+                f"🔴 {statuses.count('mismatch')} mismatch · "
                 f"🟡 {statuses.count('missing')} not found"
+                + (f" · ⚪ {len(pending_idxs)} pending" if pending_idxs else "")
             )
 
         # Re-highlight with per-reference colours derived from lookup results.
@@ -697,14 +985,23 @@ with col_refs:
             elif len(statuses) > n_refs:
                 statuses = statuses[:n_refs]
 
+            # Only re-bake the PDF with the PARSED refs (not manual ones)
+            # so adding a manual ref doesn't invalidate annotated_pdf and
+            # force a full PDF.js re-render.  Manual refs keep the rects
+            # from their original text-selection event.
+            n_manual = len(st.session_state.manual_refs)
+            parsed_count = n_refs - n_manual
+            parsed_enriched_subset = enriched_refs[:parsed_count]
+            parsed_statuses_subset = statuses[:parsed_count]
             with st.spinner("Updating PDF highlights …"):
-                annotated_pdf, enriched_refs, orphan_blocks = run_highlighter(
+                annotated_pdf, reparsed, orphan_blocks = run_highlighter(
                     pdf_bytes,
-                    json.dumps(enriched_refs),    # use the enriched list as the
-                                                  # canonical ref source — its
-                                                  # length matches `statuses`
-                    json.dumps(statuses),
+                    json.dumps(parsed_enriched_subset),
+                    json.dumps(parsed_statuses_subset),
                 )
+            # Reassemble: re-baked parsed refs + manual refs (unchanged).
+            enriched_refs = list(reparsed) + _attach_manual_rects(
+                st.session_state.manual_refs)
 
             from report import generate_report
             report_md = generate_report(
@@ -713,10 +1010,10 @@ with col_refs:
                 pdf_name=uploaded_file.name,
                 parser=parser,
             )
-            with st.expander("📋 Quality Report", expanded=False):
+            with st.expander("Quality Report", expanded=False):
                 st.markdown(report_md)
             st.download_button(
-                label="⬇️ Download report (.md)",
+                label="Download report (.md)",
                 data=report_md,
                 file_name=uploaded_file.name.rsplit(".", 1)[0] + "_reference_report.md",
                 mime="text/markdown",
@@ -724,12 +1021,12 @@ with col_refs:
         except Exception as _exc:
             import traceback as _tb
             st.error(
-                "⚠️ The post-lookup view crashed. "
+                "The post-lookup view crashed. "
                 "Please paste this traceback in the chat so I can patch it."
             )
             st.code(_tb.format_exc(), language="python")
             st.button(
-                "🔄 Reset lookup results and try again",
+                "Reset lookup results and try again",
                 on_click=lambda: st.session_state.update({"lookup_results": None}),
             )
 
@@ -751,7 +1048,7 @@ with col_refs:
     # emitting; the refs list filters to whichever page is currently in
     # the viewport.
     sync_with_pdf = st.toggle(
-        "🔗 Filter references to current PDF page",
+        "Filter references to current PDF page",
         value=False,
         help=(
             "When enabled, the PDF component reports the visible page back "
@@ -778,6 +1075,36 @@ with col_refs:
             f"on page {current_page}.  Scroll the PDF to switch pages."
         )
 
+    # --- Status filter (green / yellow / red) ----------------------------
+    # Only meaningful once lookups have run.  Counts are computed across
+    # the full ref list so the labels stay informative even when the
+    # current view is already filtered (e.g. by PDF page).
+    if lookup_results:
+        all_statuses = [_overall_status(lr) for lr in lookup_results]
+        n_match = all_statuses.count("match")
+        n_miss  = all_statuses.count("missing")
+        n_mis   = all_statuses.count("mismatch")
+        n_pend  = all_statuses.count("pending")
+        status_filter = st.radio(
+            "Filter by status",
+            options=["all", "match", "mismatch", "missing", "pending"],
+            format_func=lambda v: {
+                "all":      f"All ({len(all_statuses)})",
+                "match":    f"🟢 Verified ({n_match})",
+                "mismatch": f"🔴 Wrong ({n_mis})",
+                "missing":  f"🟡 Not found ({n_miss})",
+                "pending":  f"⚪ Pending ({n_pend})",
+            }[v],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="status_filter",
+        )
+        if status_filter != "all":
+            visible_indices = [
+                i for i in visible_indices
+                if all_statuses[i] == status_filter
+            ]
+
     # When the user clicks a highlighted annotation in the PDF, narrow the
     # list to just that ref so it auto-shows expanded at the top — no
     # scroll-to needed.  A "Show all" pill clears the focus.
@@ -785,11 +1112,11 @@ with col_refs:
     if isinstance(focused_idx, int) and 0 <= focused_idx < len(enriched_refs):
         cols = st.columns([6, 1])
         with cols[0]:
-            st.markdown(f"📍 **Focused on reference [{focused_idx + 1}]**")
+            st.markdown(f"**Focused on reference [{focused_idx + 1}]**")
         with cols[1]:
-            if st.button("✕ Clear", key="unfocus", help="Show all references again"):
+            if st.button("Clear", key="unfocus", help="Show all references again"):
                 st.session_state.focused_ref = None
-                st.rerun()
+                # No explicit rerun — see "Go to p." above for rationale.
         visible_indices = [focused_idx]
         _render_focused_expanded = True
     else:
@@ -808,8 +1135,8 @@ with col_refs:
 
     if sync_with_pdf and n_unlocated:
         st.caption(
-            f"💡 {n_unlocated} reference{'s' if n_unlocated != 1 else ''} "
-            f"could not be located in the PDF — turn **🔗 Filter references to "
+            f"{n_unlocated} reference{'s' if n_unlocated != 1 else ''} "
+            f"could not be located in the PDF — turn **Filter references to "
             f"current PDF page** OFF to see them."
         )
 
@@ -828,7 +1155,7 @@ with col_pdf:
     # Toggle between the legacy streamlit_pdf_viewer and our new
     # selection-capable component.  Default to the new one; flip via env
     # var if it misbehaves.
-    use_selector = os.getenv("REFCLEANER_PDF_SELECTOR", "1") != "0"
+    use_selector = os.getenv("ARES_PDF_SELECTOR", "1") != "0"
     if use_selector:
         from pdf_selector import pdf_selector
         # Build annotations for the component overlay.
@@ -836,11 +1163,16 @@ with col_pdf:
         # we paint each matched ref as a coloured DOM-overlay rectangle
         # via the component.  Orphan auto-highlights are intentionally
         # omitted — the user adds missed refs manually via text selection.
+        # Pending and missing both render as the same yellow.  A manually-
+        # added ref starts in `pending` until lookup runs; visually it's
+        # indistinguishable from a missing ref until it gets a verdict,
+        # at which point the colour changes naturally.  Treating them
+        # differently was confusing — looked like a render bug.
         _STATUS_TO_COLOR = {
             "match":    "rgba(46, 200, 90, 0.30)",   # green
             "mismatch": "rgba(237, 70, 70, 0.30)",   # red
             "missing":  "rgba(255, 217, 51, 0.35)",  # yellow
-            "pending":  "rgba(250, 244, 140, 0.45)", # pale yellow
+            "pending":  "rgba(255, 217, 51, 0.35)",  # same yellow as missing
         }
         component_annots: list[dict[str, Any]] = []
         for i, er in enumerate(enriched_refs):
@@ -902,13 +1234,24 @@ with col_pdf:
                             if parsed:
                                 new_ref = dict(parsed[0])
                                 new_ref["_user_added"] = True
-                                new_ref["raw"] = sel_text
+                                new_ref["raw"]  = sel_text
                                 new_ref["page"] = selection.get("page")
-                                st.session_state.manual_refs.append(new_ref)
-                                st.session_state.lookup_results = None
+                                # PDF rect from the selection — used by
+                                # _attach_manual_rects so the highlight
+                                # appears without re-baking the PDF.
+                                if selection.get("rect"):
+                                    new_ref["rect"] = selection["rect"]
+                                _append_manual_ref(new_ref)
                                 st.toast(
-                                    f"➕ Added: {(new_ref.get('title') or sel_text)[:80]}"
+                                    f"Added: {(new_ref.get('title') or sel_text)[:80]}"
                                 )
+                                # st.rerun() IS needed here: without it,
+                                # the script continues with half-applied
+                                # state and the NEXT manual add re-processes
+                                # the first selection instead of the second.
+                                # The browser scroll-to-top from rerun is
+                                # the lesser evil compared to "second add
+                                # silently duplicates the first".
                                 st.rerun()
                             else:
                                 st.warning(
@@ -936,12 +1279,12 @@ with col_pdf:
         ]
         if visible_orphans:
             st.markdown(
-                f"#### 📋 Possible missed references ({len(visible_orphans)})"
+                f"#### Possible missed references ({len(visible_orphans)})"
             )
             st.caption(
                 "These are text blocks on the same pages as your parsed "
                 "references that didn't get claimed — usually citations the "
-                "parser missed.  Click ➕ to add one to the reference list."
+                "parser missed.  Click + to add one to the reference list."
             )
             for j, orph in enumerate(visible_orphans):
                 cols = st.columns([10, 1])
@@ -949,7 +1292,7 @@ with col_pdf:
                     f"_p. {orph['page']}_ — {orph['text'][:240]}"
                     + ("…" if len(orph["text"]) > 240 else "")
                 )
-                if cols[1].button("➕", key=f"add_orphan_{j}",
+                if cols[1].button("+", key=f"add_orphan_{j}",
                                   help="Add as reference"):
                     from parsers import _grobid_process_citation_list
                     try:
@@ -959,9 +1302,8 @@ with col_pdf:
                             new_ref["_user_added"] = True
                             new_ref["raw"] = orph["text"].strip()
                             new_ref["page"] = orph["page"]
-                            st.session_state.manual_refs.append(new_ref)
-                            st.session_state.lookup_results = None
-                            st.rerun()
+                            _append_manual_ref(new_ref)
+                            st.rerun()   # see manual-add handler above
                         else:
                             st.error("GROBID couldn't structure this block as a citation.")
                     except Exception as e:

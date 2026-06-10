@@ -1,0 +1,2067 @@
+[
+  {
+    "event_id": 1,
+    "venue": "naacl-2024",
+    "paper_id": "2024.naacl-short.63",
+    "citation_key": "Scaria et al. (2024)",
+    "hallucinated_citation": "Himanshu Gupta, Kevin Scaria, Swaroop Mishra, and Chitta Baral. 2024b. Beyond the data bottleneck: Optimizing instruction tuning with difficulty-based exemplar selection. ArXiv preprint."
+  },
+  {
+    "event_id": 2,
+    "venue": "naacl-2024",
+    "paper_id": "2024.trustnlp-1.1",
+    "citation_key": "Adilazuarda (2024)",
+    "hallucinated_citation": "Daphne Ippolito, Daniel Duckworth, Chris CallisonBurch, and Douglas Eck. 2020. Discriminating between human-produced and machine-generated text: A survey. arXiv preprint arXiv:2012.03358."
+  },
+  {
+    "event_id": 3,
+    "venue": "acl-2024",
+    "paper_id": "2024.acl-long.560",
+    "citation_key": "Siska et al. (2024)",
+    "hallucinated_citation": "Keisuke Sakaguchi, Ronan Le Bras, Chandra Bhagavatula, and Yejin Choi. 2023. An adversarial winograd schema challenge at scale. arXiv preprint arXiv:2305.06300."
+  },
+  {
+    "event_id": 4,
+    "venue": "acl-2024",
+    "paper_id": "2024.acl-long.611",
+    "citation_key": "Zheng et al. (2024)",
+    "hallucinated_citation": "Chun-Hung Yeh, Anuradha Welivita, and Pearl Pu Faltings. 2015. A dialogue dataset containing emotional support for people in distress. arXiv preprint arXiv:1503.08895."
+  },
+  {
+    "event_id": 5,
+    "venue": "acl-2024",
+    "paper_id": "2024.acl-long.768",
+    "citation_key": "Chen et al. (2024)",
+    "hallucinated_citation": "Mengjie Fang, Linlin Xu, and Pascale Fung. 2020. Unsupervised cross-lingual transfer learning for contextualized word embeddings. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 2616–2629."
+  },
+  {
+    "event_id": 6,
+    "venue": "acl-2024",
+    "paper_id": "2024.arabicnlp-1.24",
+    "citation_key": "Khondaker et al. (2024)",
+    "hallucinated_citation": "Isabel Moreno and Wei Zhang. 2024. Evaluating multilingual models on nlp tasks in arabic. Computational Linguistics, 50(3):425–445."
+  },
+  {
+    "event_id": 7,
+    "venue": "acl-2024",
+    "paper_id": "2024.arabicnlp-1.45",
+    "citation_key": "Shah et al. (2024)",
+    "hallucinated_citation": "Naoya Inoue, Pontus Stenetorp, and Kentaro Inui. 2021. Interplay between preferences and machine learning in language model fine-tuning. arXiv preprint arXiv:2110.08413."
+  },
+  {
+    "event_id": 8,
+    "venue": "acl-2024",
+    "paper_id": "2024.findings-acl.241",
+    "citation_key": "Holt et al. (2024)",
+    "hallucinated_citation": "Junjie Li, Jieyu Wu, and Richard Socher. 2021. Understanding code-switching in language models. arXiv preprint arXiv:2109.04278."
+  },
+  {
+    "event_id": 9,
+    "venue": "acl-2024",
+    "paper_id": "2024.wassa-1.18",
+    "citation_key": "Alhamed et al. (2024)",
+    "hallucinated_citation": "David Benetka, Alicia Moreno-Moral, Lorena RomeroFombuena, and Juan Lopez-Gazpio. 2020. An annotation scheme for mental health discussions in social media. In International Conference on Computational Linguistics (Proceedings of the Conference: Long Papers, 2020), pages 2617–2627. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 10,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.conll-1.8",
+    "citation_key": "Mundra et al. (2024)",
+    "hallucinated_citation": "Adam Alabi, Saleha Nawaz, and Vincent Ng. 2022. Alabi: A light-weight approach for multilingual biomedical language models. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing, pages 9717–9727."
+  },
+  {
+    "event_id": 11,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.emnlp-demo.11",
+    "citation_key": "Sheth et al. (2024)",
+    "hallucinated_citation": "Stephan Druskat, Ulrike Gut, Nils Reiter, Stefan Schweter, and Manfred Stede. 2014. Atomic: An open-source tool for working with anaphora in multiple languages. In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing: System Demonstrations, pages 71–76."
+  },
+  {
+    "event_id": 12,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.emnlp-industry.112",
+    "citation_key": "Malik et al. (2024)",
+    "hallucinated_citation": "Jiajia Liu, Mengyuan Yang, Yankai Yu, Haixia Xu, Kang Li, and Xiaobo Zhou. 2023a. Enhancing customer experience with ai-driven conversational agents. arXiv preprint arXiv:2306.04325."
+  },
+  {
+    "event_id": 13,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.emnlp-main.345",
+    "citation_key": "Xiao et al. (2024)",
+    "hallucinated_citation": "Nelson F Liu, Tony Wu, Duane S Boning, and Tanmoy Choudhury. 2020b. AI bug detector: Adversarial input detection for natural language processing models. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing: System Demonstrations, page 187–196."
+  },
+  {
+    "event_id": 14,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.emnlp-main.464",
+    "citation_key": "Wang et al. (2024b)",
+    "hallucinated_citation": "Yu Gu, Robert Tinn, Hao Cheng, Youzheng Ben, Zhuozhao Liu, Jingqi Zhou, Michael Wang, Shizhuo Wang, Hongfang Zhou, and Yanshan Shen. 2021. Biomedgpt: A large-scale biomedical generative pretrained transformer for biomedical text mining. arXiv preprint arXiv:2104.07497."
+  },
+  {
+    "event_id": 15,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.emnlp-main.617",
+    "citation_key": "Wahle et al. (2024)",
+    "hallucinated_citation": "Dominik Meier, Jan Philip Wahle, Terry Ruas, and Bela Gipp. 2024. A human study on atomic paraphrase type generation. arXiv."
+  },
+  {
+    "event_id": 16,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.findings-emnlp.232",
+    "citation_key": "Zhang et al. (2024)",
+    "hallucinated_citation": "Yi Chen et al. 2023. Empowering cloud rca with augmented large language models. arXiv preprint arXiv:2311.00000."
+  },
+  {
+    "event_id": 17,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.findings-emnlp.813",
+    "citation_key": "Li et al. (2024)",
+    "hallucinated_citation": "Ruochen Wang, Ting Liu, Cho-jui Hsieh, and Boqing Gong. 2023. DPO-DIFF:on Discrete Prompt Optimization for text-to-image DIFFusion modelsgenerating Natural Language Adversarial Examples. Preprint, arXiv:2311.07998."
+  },
+  {
+    "event_id": 18,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.findings-emnlp.912",
+    "citation_key": "Sonkar et al. (2024)",
+    "hallucinated_citation": "Yoav Goldberg. 2022. Assessing claims about large language models. arXiv preprint arXiv:2212.09273."
+  },
+  {
+    "event_id": 19,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.findings-emnlp.981",
+    "citation_key": "Zafar et al. (2024)",
+    "hallucinated_citation": "Xinyu Wang, Tao Sun, Deqing Zou, Wei Wu, and Jiawei Han. 2021. Logic-guided data augmentation and regularization for consistency learning. arXiv preprint arXiv:2104.04379."
+  },
+  {
+    "event_id": 20,
+    "venue": "emnlp-2024",
+    "paper_id": "2024.mrl-1.20",
+    "citation_key": "Skianis et al. (2024)",
+    "hallucinated_citation": "Shaoxiong Ji, Yanzhao Zhang, Leilei Sun, and Jia Wang. 2022. Mentalbert: A pretrained language model for mental healthcare. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP)."
+  },
+  {
+    "event_id": 21,
+    "venue": "naacl-2025",
+    "paper_id": "2025.americasnlp-1.4",
+    "citation_key": "Alvarez C et al. (2025)",
+    "hallucinated_citation": "Manuel Mager, Arturo Oncevay, Annette Rios, Jamshidbek Mirzakhalov, and Katharina Kann. 2023. The role of computational linguistics in indigenous language revitalization: Challenges and opportunities. In Proceedings of the 1st Workshop on Computation for Indigenous Languages (C3NLP), pages 23–31."
+  },
+  {
+    "event_id": 22,
+    "venue": "naacl-2025",
+    "paper_id": "2025.clpsych-1.23",
+    "citation_key": "Antony and Schoene (2025)",
+    "hallucinated_citation": "Ilias Chalkidis, Ion Androutsopoulos, and Nikolaos Aletras. 2022. An empirical study on neural methods for legal judgment prediction. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing, pages 4783–4798. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 23,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.117",
+    "citation_key": "Noor et al. (2025)",
+    "hallucinated_citation": "G. Shimi et al. 2024. Language identification for dravidian languages: A crucial step for fake news detection in multilingual settings. TBD."
+  },
+  {
+    "event_id": 24,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.118",
+    "citation_key": "Selvamurugan (2025)",
+    "hallucinated_citation": "Anil Kumar, Ajay Kumar Ojha, Shervin Malmasi, and Marcos Zampieri. 2021. Benchmarking aggression identification in social media for low-resource languages. In Proceedings of the Workshop on Online Abuse and Harms (ACL)."
+  },
+  {
+    "event_id": 25,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.38",
+    "citation_key": "S et al. (2025a)",
+    "hallucinated_citation": "Simran Khanuja, Kaustav Dey, El Moatez Billah Karim Nagoudi, et al. 2020. A new dataset and strong baselines for the detection of code-mixed offensive language. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1719–1726."
+  },
+  {
+    "event_id": 26,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.43",
+    "citation_key": "Chauhan and Kumar (2025)",
+    "hallucinated_citation": "Douwe Kiela, Mohamed Elhoseiny, Lin Zhang, Marco Baroni, and Geoffrey Hinton. 2019. Supervised multimodal hashing for scalable cross-modal retrieval. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1740–1751."
+  },
+  {
+    "event_id": 27,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.61",
+    "citation_key": "K et al. (2025)",
+    "hallucinated_citation": "F. Wu and M. Dredze. 2019. Social media as a sensor of public opinion. Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP 2019), 2019:1001–1010."
+  },
+  {
+    "event_id": 28,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.62",
+    "citation_key": "Vaidyanathan et al. (2025a)",
+    "hallucinated_citation": "Jiho Park, Jihyung Shin, Sangyoun Lee, and Changhyun Seo. 2018. A survey of hate speech detection: Data, methods, and challenges. In Proceedings of the 27th International Conference on Computational Linguistics (COLING 2018), pages 385–395. International Committee on Computational Linguistics."
+  },
+  {
+    "event_id": 29,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.7",
+    "citation_key": "Sathvik et al. (2025b)",
+    "hallucinated_citation": "M. H. Al-Adhaileh and F. W. Alsaade. 2022. Bidirectional long-short term memory (bilstm) networks for fake review detection: A comparative study. Springer."
+  },
+  {
+    "event_id": 30,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.88",
+    "citation_key": "Achamaleh et al. (2025)",
+    "hallucinated_citation": "Anna Kolesnikova and Sergey Ivanov. 2023. Exploring multilingual text representations with transformer models. Transactions of the ACL, 11:212–230."
+  },
+  {
+    "event_id": 31,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.91",
+    "citation_key": "Aftahee et al. (2025)",
+    "hallucinated_citation": "R. Raja, A. Kumar, and S. Joseph. 2023. Fake news detection in low-resource languages: Challenges and advancements. Computational Linguistics Review, 15(2):123–137."
+  },
+  {
+    "event_id": 32,
+    "venue": "naacl-2025",
+    "paper_id": "2025.dravidianlangtech-1.97",
+    "citation_key": "Sathvik et al. (2025a)",
+    "hallucinated_citation": "Simran Khanuja, Sandipan Dandapat, Ritesh Kumar, Sunayana Sitaram, K. P. Soman, and Anup Kumar. 2021. Mahanlp: Towards indic language understanding using bert models for hindi, marathi, and kannada. arXiv preprint arXiv:2106.07469."
+  },
+  {
+    "event_id": 33,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.132",
+    "citation_key": "Singh et al. (2025)",
+    "hallucinated_citation": "W. Liu, X. Li, W. Yang, Y. Lin, X. Liu, S. Wang, C. Xie, L. Xu, W. Zhuang, X. Zhao, and L. Li. 2020. Minilm: Deep self-attention distillation for tiny transformers. arXiv preprint arXiv:2002.10957."
+  },
+  {
+    "event_id": 34,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.223",
+    "citation_key": "Zhu et al. (2025e)",
+    "hallucinated_citation": "Krishnateja Killamsetty and Rishabh Iyer. 2021. Subset selection with gradient matching. arXiv preprint arXiv:2103.00123."
+  },
+  {
+    "event_id": 35,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.230",
+    "citation_key": "Raihan et al. (2025)",
+    "hallucinated_citation": "OpenAI. 2024. Gpt-4 omni: A comprehensive multimodal model for language, vision, and beyond. arXiv preprint arXiv:2408.01234."
+  },
+  {
+    "event_id": 36,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.257",
+    "citation_key": "Magomere et al. (2025)",
+    "hallucinated_citation": "Chaitanya Shivade et al. 2019. Mednli-a natural language inference dataset for the clinical domain. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing, Brussels, Belgium. Association for Computational Linguistics, pages 1586–1596."
+  },
+  {
+    "event_id": 37,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.275",
+    "citation_key": "Song et al. (2025b)",
+    "hallucinated_citation": "M Honnibal and I Montani. 2017. spacy 2: Natural language understanding with bloom embeddings, convolutional neural networks and incremental parsing. neural machine translation. In Proceedings of the Association for Computational Linguistics (ACL), pages 688–697."
+  },
+  {
+    "event_id": 38,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.279",
+    "citation_key": "Basher et al. (2025)",
+    "hallucinated_citation": "Y. Xu et al. 2023. Cross-lingual transfer for lowresource text-to-speech. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing, pages 510–520. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 39,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.349",
+    "citation_key": "Gupta et al. (2025a)",
+    "hallucinated_citation": "Zijun Zhang, Yue Wu, Hao Guan, Xinlei Chen, and Yue Zhang. 2023. Continual learning with transformers: Challenges and solutions. arXiv preprint arXiv:2302.13713."
+  },
+  {
+    "event_id": 40,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.418",
+    "citation_key": "Nguyen et al. (2025b)",
+    "hallucinated_citation": "Danny Hernandez, Jared Kaplan, Tom Henighan, Tom Brown, Jack Clark, Preetum Nakkiran, Catherine Olsson, and Afshin Rahimi. 2023. Measuring data contamination in large language models. arXiv preprint arXiv:2303.13375."
+  },
+  {
+    "event_id": 41,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.452",
+    "citation_key": "Wu et al. (2025a)",
+    "hallucinated_citation": "Abhijit Srivastava, Nathan Major, Jasmine D. Hernandez, and et al. 2022. Beyond the imitation game: Quantifying and extrapolating llm capabilities with big-bench. arXiv preprint arXiv:2206.04615."
+  },
+  {
+    "event_id": 42,
+    "venue": "naacl-2025",
+    "paper_id": "2025.findings-naacl.58",
+    "citation_key": "Liu et al. (2025c)",
+    "hallucinated_citation": "Xiang Jiang et al. 2023c. Mistral-7b-instruct-v0.2: An efficient large language model for instruction following. arXiv preprint arXiv:2309.00001."
+  },
+  {
+    "event_id": 43,
+    "venue": "naacl-2025",
+    "paper_id": "2025.knowledgenlp-1.18",
+    "citation_key": "Spangher et al. (2025a)",
+    "hallucinated_citation": "Tushar Khot, Ashish Sabharwal, and et al. 2023. Decomposition-driven reasoning in language models. arXiv preprint arXiv:2304.xxxxx."
+  },
+  {
+    "event_id": 44,
+    "venue": "naacl-2025",
+    "paper_id": "2025.knowledgenlp-1.20",
+    "citation_key": "Pattnayak et al. (2025)",
+    "hallucinated_citation": "et al. Zhao, W. 2020. A retrieval-augmented encoder-decoder for knowledge-intensive nlp tasks. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL)."
+  },
+  {
+    "event_id": 45,
+    "venue": "naacl-2025",
+    "paper_id": "2025.loresmt-1.12",
+    "citation_key": "Raja and Vats (2025)",
+    "hallucinated_citation": "Kalika Bali, Jatin Sharma, Monojit Choudhury, and Yogarshi Vyas. 2014. Code-mixing: A challenge for language identification in the indian context. In Proceedings of the First Workshop on Computational Approaches to Code Switching (EMNLP), pages 13–23."
+  },
+  {
+    "event_id": 46,
+    "venue": "naacl-2025",
+    "paper_id": "2025.naacl-demo.39",
+    "citation_key": "Hiray and Kovatchev (2025)",
+    "hallucinated_citation": "T. Lee et al. 2023. Bivdiff: A training-free framework for general-purpose video synthesis. arXiv preprint arXiv:2302.02918."
+  },
+  {
+    "event_id": 47,
+    "venue": "naacl-2025",
+    "paper_id": "2025.naacl-industry.68",
+    "citation_key": "Jararweh et al. (2025)",
+    "hallucinated_citation": "Haotian Liu, Chunyuan Lin, Fangyun Zeng, and et al. 2023a. Llava: Large language and vision assistant. arXiv preprint arXiv:2304.08485."
+  },
+  {
+    "event_id": 48,
+    "venue": "naacl-2025",
+    "paper_id": "2025.naacl-long.182",
+    "citation_key": "Chen et al. (2025b)",
+    "hallucinated_citation": "Ebtesam Almazrouei, Hamza Alobeidli, Abdulaziz Alshamsi, Alessandro Cappelli, Ruxandra Cojocaru, Merouane Debbah, Etienne Goffinet, Daniel Heslow, Julien Launay, Quentin Malartic, et al. 2023. Falcon-40b: an open large language model with stateof-the-art performance. Findings of the Association for Computational Linguistics: ACL, 2023:10755–10773."
+  },
+  {
+    "event_id": 49,
+    "venue": "naacl-2025",
+    "paper_id": "2025.naacl-long.363",
+    "citation_key": "Qian et al. (2025)",
+    "hallucinated_citation": "Zhengbao Jiang, Frank F Xu, Jun Araki, and Graham Neubig. 2020. Can prompt-based learning be practical for low-resource tasks? arXiv preprint arXiv:2001.07676."
+  },
+  {
+    "event_id": 50,
+    "venue": "naacl-2025",
+    "paper_id": "2025.naacl-long.371",
+    "citation_key": "Wysocka et al. (2025)",
+    "hallucinated_citation": "Jakob Prange, Khalil Mrini, and Noah A. Smith. 2023. Challenges and opportunities in nlp for systematic generalization: Beyond compositionality. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 51,
+    "venue": "naacl-2025",
+    "paper_id": "2025.naacl-long.620",
+    "citation_key": "Chen et al. (2025c)",
+    "hallucinated_citation": "Jiawei Liu, Yifeng Ding, Naman Jain, Harm de Vries, Leandro von Werra, Arjun Guha, Lingming Zhang, and Yuxiang Wei. 2024a. Starcoder2-instruct: Fully transparent and permissive self-alignment for code generation. Preprint, arXiv:2307.08701."
+  },
+  {
+    "event_id": 52,
+    "venue": "naacl-2025",
+    "paper_id": "2025.naacl-long.72",
+    "citation_key": "Hu et al. (2025)",
+    "hallucinated_citation": "Mor Geva, Yoav Goldberg, and Jonathan Berant. 2021. Strategyqa: A question answering benchmark for reasoning about strategies. In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing."
+  },
+  {
+    "event_id": 53,
+    "venue": "naacl-2025",
+    "paper_id": "2025.naacl-short.79",
+    "citation_key": "Kumar et al. (2025)",
+    "hallucinated_citation": "Sankha Bhattacharjee et al. 2023. Adversarial learning for robust ai-generated text detection. arXiv preprint arXiv:2304.07812."
+  },
+  {
+    "event_id": 54,
+    "venue": "naacl-2025",
+    "paper_id": "2025.nlp4dh-1.52",
+    "citation_key": "Greschner and Klinger (2025)",
+    "hallucinated_citation": "Chiara Leoni, Mauro Coccoli, Ilaria Torre, and Gianni Vercelli. 2018. Your paper title here. In Proceedings of the Fifth Italian Conference on Computational Linguistics (CLiC-it 2018), Torino, Italy. Accademia University Press."
+  },
+  {
+    "event_id": 55,
+    "venue": "naacl-2025",
+    "paper_id": "2025.wnu-1.10",
+    "citation_key": "Li et al. (2025j)",
+    "hallucinated_citation": "Xingxing Lu, Yuning Mao, and Jason Wei. 2023. Autoeval: Llm-based automatic evaluation framework for text summarization. In Findings of ACL."
+  },
+  {
+    "event_id": 56,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-demo.16",
+    "citation_key": "She et al. (2025)",
+    "hallucinated_citation": "Wenhao Zheng and 1 others. 2025a. Citer: Confidencebased token routing for collaborative inference with large language models. arXiv preprint arXiv:2503.01013."
+  },
+  {
+    "event_id": 57,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-demo.25",
+    "citation_key": "Zheng et al. (2025b)",
+    "hallucinated_citation": "Wei Zhang, Pengfei Liu, and Qiang Shen. 2020. Handling ambiguities in geographic texts using nlp techniques. Transactions in GIS, 24(3):519–538."
+  },
+  {
+    "event_id": 58,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-demo.44",
+    "citation_key": "Yang et al. (2025b)",
+    "hallucinated_citation": "Ziniu Wu, Cheng Liu, Jindong Zhang, Xinyun Li, Yewen Wang, Jimmy Xin, Lianmin Zhang, Eric Xing, Yuxin Lu, and Percy Liang. 2023. Autogen: Enabling next-generation multi-agent communication with language models. arXiv preprint arXiv:2309.07864."
+  },
+  {
+    "event_id": 59,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-industry.30",
+    "citation_key": "Fu et al. (2025)",
+    "hallucinated_citation": "Yihan Chen, Dongkuan Zhang, Xiang Wang, Yifan Yang, and Heng Wang. 2023. Dare: ldirect parameter editing for adaptive mode reconfiguration. arXiv preprint arXiv:2310.09570."
+  },
+  {
+    "event_id": 60,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-industry.54",
+    "citation_key": "Zhu et al. (2025a)",
+    "hallucinated_citation": "Yijie Deng, He Zhu, Wen Wang, Minxin Chen, Junyou Su, and Wenjia Zhang. 2025. Urban planning bench: A comprehensive benchmark for evaluating urban planning capabilities in large language models. †Equal contribution. *Corresponding author: wenjiazhang@tongji.edu.cn."
+  },
+  {
+    "event_id": 61,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.1034",
+    "citation_key": "Zhou and Di Eugenio (2025)",
+    "hallucinated_citation": "Jane Doe and Wei Chen. 2023. Debiasing reasoning in language models: A quantitative study. Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing."
+  },
+  {
+    "event_id": 62,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.1369",
+    "citation_key": "Chen et al. (2025e)",
+    "hallucinated_citation": "Mia Xu Chen, Orhan Firat, Ankur Bapna, Melvin Johnson, and Wolfgang Macherey. 2024a. Scaling laws across model architectures: A comparative analysis of dense and mixture of experts models. arXiv preprint arXiv:2410.05661."
+  },
+  {
+    "event_id": 63,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.1409",
+    "citation_key": "Frydenlund (2025)",
+    "hallucinated_citation": "Jason Lee, Elman Mansimov, and Kyunghyun Cho. 2018. Deterministic non-autoregresinterpreting gpt: the logit lenssive neural sequence modeling by iterative refinement. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing, pages 1173–1182, Brussels, Belgium. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 64,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.1435",
+    "citation_key": "Jia et al. (2025a)",
+    "hallucinated_citation": "Mei Li et al. 2024. Securing tool use in llm agents: Challenges and strategies. arXiv preprint arXiv:2402.03014."
+  },
+  {
+    "event_id": 65,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.1439",
+    "citation_key": "Siingh et al. (2025)",
+    "hallucinated_citation": "Wei Xu, Shujie Liu, Minlie Huang, Si Wei, and Hang Li. 2018. A survey on hallucination in neural machine translation. arXiv preprint arXiv:1803.02577. Accessed: 2025-02-14."
+  },
+  {
+    "event_id": 66,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.1554",
+    "citation_key": "Klisura et al. (2025)",
+    "hallucinated_citation": "Dorottya Demeszky, Weijie Gong, and Diyi Yang. 2019. Analyzing bias and framing in news articles on artificial intelligence: The case of sentiment analysis. In Proceedings of the 2019 Annual Conference on Empirical Methods in Natural Language Processing, pages 1655–1661."
+  },
+  {
+    "event_id": 67,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.1580",
+    "citation_key": "Spangher et al. (2025b)",
+    "hallucinated_citation": "Minjun Chang et al. 2023. Self-reflection with generative agents. arXiv preprint arXiv:2311.09214."
+  },
+  {
+    "event_id": 68,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.248",
+    "citation_key": "Lee et al. (2025)",
+    "hallucinated_citation": "Wei Chen, Arjun Kumar, and Lin Yang. 2024. Distraction-based attack prompts: An effective jailbreaking method for llms. Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL)."
+  },
+  {
+    "event_id": 69,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.272",
+    "citation_key": "Meng et al. (2025)",
+    "hallucinated_citation": "Chen et al. 2023a. Nl2fol: Natural language to firstorder logic. arXiv preprint arXiv:2304.09102."
+  },
+  {
+    "event_id": 70,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.340",
+    "citation_key": "Li et al. (2025c)",
+    "hallucinated_citation": "openai. 2024. Learning to reason with llm. Preprint, arXiv:2406.19949."
+  },
+  {
+    "event_id": 71,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.421",
+    "citation_key": "Zhu et al. (2025b)",
+    "hallucinated_citation": "Xu Sun, Xiaoya Zhang, Yicheng Feng, Shiyang Wang, Shuming Ma, Jiuding He, Zhixu Zhang, Yuxian Gu, Yi Xu, Hao Zhou, and Zhiyuan Liu. 2023. A systematic capability evaluation of large vision-language models. arXiv preprint arXiv:2305.16372."
+  },
+  {
+    "event_id": 72,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.491",
+    "citation_key": "Alsagheer et al. (2025)",
+    "hallucinated_citation": "Hao Zhong, Jieyu Tang, Tianyang Xu, et al. 2020. Does nlp benefit legal system? a case study of document representation. arXiv preprint arXiv:2005.01647."
+  },
+  {
+    "event_id": 73,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.922",
+    "citation_key": "Mohammad (2025)",
+    "hallucinated_citation": "Jan Philip Wahle, Krishnapriya Vishnubhotla, Bela Gipp, and Saif M. Mohammad. 2025. Affect, body, cognition, demographics, and emotion: The abcde of text features for computational affective science. arXiv."
+  },
+  {
+    "event_id": 74,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-long.979",
+    "citation_key": "Chang et al. (2025)",
+    "hallucinated_citation": "Xinyu Li, Rahul Gupta, and Emily Brown. 2024. Datacomplm: Benchmarking data quality in large language models. arXiv preprint arXiv:2402.23456."
+  },
+  {
+    "event_id": 75,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-srw.40",
+    "citation_key": "Wu et al. (2025b)",
+    "hallucinated_citation": "[first names omitted for brevity] Zhang and colleagues. 2024. Metagpt: Meta programming sota autonomous multi-agent cooperative llm workflows. arXiv preprint arXiv:2404.14496."
+  },
+  {
+    "event_id": 76,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-srw.56",
+    "citation_key": "Pulido et al. (2025)",
+    "hallucinated_citation": "Sabrina J. Mielke, Tal Linzen, and Jason Eisner. 2021. What kind of knowledge is captured by contextualized word representations? In Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics, pages 1250–1265."
+  },
+  {
+    "event_id": 77,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-srw.73",
+    "citation_key": "Sakunkoo and Sakunkoo (2025)",
+    "hallucinated_citation": "Christo Kirov, John Sylak-Glassman, Ryan Que, David Yarowsky, Jason Eisner, and Ryan Cotterell. 2018. Universal morphological inflection generation using a multilingual dataset. Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics (NAACL), pages 52–62."
+  },
+  {
+    "event_id": 78,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-srw.85",
+    "citation_key": "Dzhubaeva et al. (2025)",
+    "hallucinated_citation": "Y. Wang, H. Li, and X. Zhang. 2024. Consistency of personality traits in quantized role-playing dialogue agents. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: Industry Track, pages 123–130."
+  },
+  {
+    "event_id": 79,
+    "venue": "acl-2025",
+    "paper_id": "2025.acl-srw.98",
+    "citation_key": "Kumar and Nolbaria (2025)",
+    "hallucinated_citation": "Raghuraj Sailesh Shah, Ankur Anand, Srini Chodisetti, Ankit Gupta, Raj Sanjay Patel, Sameer Patel, and Manish Gupta. 2022. FinservNLP: A library of financial shared tasks and benchmarks. In Proceedings of the Third Workshop on Economics and Natural Language Processing, pages 144–150. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 80,
+    "venue": "acl-2025",
+    "paper_id": "2025.africanlp-1.1",
+    "citation_key": "Akpobi (2025)",
+    "hallucinated_citation": "Adewale Oladipo et al. 2023. Wura: A multilingual dataset of african languages. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics."
+  },
+  {
+    "event_id": 81,
+    "venue": "acl-2025",
+    "paper_id": "2025.africanlp-1.15",
+    "citation_key": "Ismail et al. (2025)",
+    "hallucinated_citation": "J. Sohn and 1 others. 2024. Rationale-guided rag for medical question answering. arXiv preprint arXiv:2411.00300."
+  },
+  {
+    "event_id": 82,
+    "venue": "acl-2025",
+    "paper_id": "2025.africanlp-1.30",
+    "citation_key": "Pandya et al. (2025)",
+    "hallucinated_citation": "M. Martin et al. 2022. Swahbert: Enhancing swahili nlp with pretrained transformers. In Proc. EACL."
+  },
+  {
+    "event_id": 83,
+    "venue": "acl-2025",
+    "paper_id": "2025.argmining-1.30",
+    "citation_key": "El Baff et al. (2025)",
+    "hallucinated_citation": "Yiqiu Xu, Alessio Frosini, Mattia Vanni, Anisa Rula, and Roberto Navigli. 2024. Frase: Frame-based semantic enrichment for sparql query generation. arXiv preprint arXiv:2503.22144."
+  },
+  {
+    "event_id": 84,
+    "venue": "acl-2025",
+    "paper_id": "2025.bea-1.66",
+    "citation_key": "Rezayi et al. (2025)",
+    "hallucinated_citation": "Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, Humen Zhong, Yuanzhi Zhu, Mingkun Yang, Zhaohai Li, Jianqiang Wan, Pengfei Wang, Wei Ding, Zheren Fu, Yiheng Xu, Jiabo Ye, Xi Zhang, Tianbao Xie, Zesen Cheng, Hang Zhang, Zhibo Yang, Haiyang Xu, and Junyang Lin. 2024. Qwen2.5: The next generation of qwen large language models. arXiv preprint arXiv:2407.10671."
+  },
+  {
+    "event_id": 85,
+    "venue": "acl-2025",
+    "paper_id": "2025.bea-1.73",
+    "citation_key": "Nebhi et al. (2025)",
+    "hallucinated_citation": "Elizabeth Mayfield and Alan W. Black. 2020. Automated scoring of written essays with transformer models. In Proc. BEA at ACL 2020."
+  },
+  {
+    "event_id": 86,
+    "venue": "acl-2025",
+    "paper_id": "2025.bea-1.86",
+    "citation_key": "Jain and Rengarajan (2025)",
+    "hallucinated_citation": "Tianyu Zhang, Sayak Basu, Douwe Kiela, and Oriol Vinyals. 2024. Cascade-aware training and inference for more resource-efficient language models. arXiv preprint arXiv:2405.12345."
+  },
+  {
+    "event_id": 87,
+    "venue": "acl-2025",
+    "paper_id": "2025.bionlp-1.6",
+    "citation_key": "Kumar and Basu (2025)",
+    "hallucinated_citation": "Ilias Chalkidis, Michail Fergadiotis, Roger Stradling, Nikolaos Pappas, and Prodromos Malakasiotis. 2020. Transformer-based models for legal and biomedical document classification: A comparative study. In Proceedings of ACL."
+  },
+  {
+    "event_id": 88,
+    "venue": "acl-2025",
+    "paper_id": "2025.bionlp-share.22",
+    "citation_key": "Evgin et al. (2025)",
+    "hallucinated_citation": "Qingxiu Jia, Qipeng Xu, Weiting Yu, Yitong Duan, JianYun Nie, and Zhiyuan Liu. 2022. Alignscore: Evaluating factual consistency with contextual alignment. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP)."
+  },
+  {
+    "event_id": 89,
+    "venue": "acl-2025",
+    "paper_id": "2025.bionlp-share.33",
+    "citation_key": "Xu et al. (2025a)",
+    "hallucinated_citation": "Yang Liu, Ani Nenkova, and Kathleen McKeown. 2022. Incorporating controllability in neural abstractive summarization. In Proceedings of the 60th Annual Meeting of the ACL, pages 876–890. ACL."
+  },
+  {
+    "event_id": 90,
+    "venue": "acl-2025",
+    "paper_id": "2025.bionlp-share.34",
+    "citation_key": "Phasook et al. (2025)",
+    "hallucinated_citation": "Sahil Dhuliawala, Raghav Gupta, and Shashi Narayan. 2023. Chain-of-verification: Enhancing llm factuality with self-verification. In NAACL."
+  },
+  {
+    "event_id": 91,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.114",
+    "citation_key": "Gupta et al. (2025b)",
+    "hallucinated_citation": "Yao Du, Kaitao Qian, Sanmi Koyejo, Zheng Zheng, and Chao Zhang. 2023. Alpaca: A strong, replicable instruction-following model. arXiv preprint arXiv:2303.16199."
+  },
+  {
+    "event_id": 92,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.1140",
+    "citation_key": "Cui et al. (2025b)",
+    "hallucinated_citation": "Xiaoyu Li, Wei Zhang, Jiahui Chen, and Hongwei Liu. 2024c. Iris: Benchmarking large language models for information retrieval tasks. arXiv preprint arXiv:2401.12345."
+  },
+  {
+    "event_id": 93,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.1143",
+    "citation_key": "Das et al. (2025b)",
+    "hallucinated_citation": "Raphael Rafailov, Orion Redwood, et al. 2023. Direct preference optimization: You don’t need rewards to finish rlhf. arXiv preprint arXiv:2305.11517. Preprint, arXiv:2305.11517."
+  },
+  {
+    "event_id": 94,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.1156",
+    "citation_key": "Zafrir et al. (2025)",
+    "hallucinated_citation": "Shashi Narayan, Shay B. Cohen, and Mirella Lapata. 2018. Xsum: A new dataset for abstractive summarization of news articles. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 701–711."
+  },
+  {
+    "event_id": 95,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.1184",
+    "citation_key": "Garg et al. (2025)",
+    "hallucinated_citation": "William Berrios, Yonglong Tian, Chiraag Lala, Alec Parrish, and Trevor Darrell. 2023. Lens: A learnable embedding name space for multi-modal, multi-task learning. arXiv preprint arXiv:2306.11527."
+  },
+  {
+    "event_id": 96,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.1208",
+    "citation_key": "Das et al. (2025a)",
+    "hallucinated_citation": "Rakesh Gupta, Susan Johnson, and Wei Li. 2023. Prompt abstraction: Leveraging language-image embeddings to scale creativity. arXiv preprint arXiv:2302.12345."
+  },
+  {
+    "event_id": 97,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.1231",
+    "citation_key": "Zhou et al. (2025a)",
+    "hallucinated_citation": "Oron Anschel, Nir Baram, and Nahum Shimkin. 2018. Learning representations in a multi-agent environment. In International Conference on Learning Representations."
+  },
+  {
+    "event_id": 98,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.1278",
+    "citation_key": "Bi et al. (2025)",
+    "hallucinated_citation": "DeepSeek-AI. 2024. Deepseek llm: Scaling opensource language models with longevity value. arXiv preprint arXiv:2401.02954."
+  },
+  {
+    "event_id": 99,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.1279",
+    "citation_key": "Nahin et al. (2025)",
+    "hallucinated_citation": "W Lian, B Goodson, E Pentland, et al. 2023. Openorca: An open dataset of gpt augmented flan reasoning traces. arXiv preprint arXiv:2305.11206."
+  },
+  {
+    "event_id": 100,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.228",
+    "citation_key": "Maji et al. (2025)",
+    "hallucinated_citation": "Ramesh Patel et al. 2023. Evaluating cultural understanding in multilingual models. arXiv preprint arXiv:2302.12345."
+  },
+  {
+    "event_id": 101,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.268",
+    "citation_key": "Tong and Wang (2025)",
+    "hallucinated_citation": "David Bamman. 2020. Booknlp: Natural language processing for long-form text. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing: System Demonstrations, pages 1–7. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 102,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.282",
+    "citation_key": "Sun et al. (2025)",
+    "hallucinated_citation": "Tianle Li, Wei-Lin Chiang, Lisa Dunlap Evan Frick, Banghua Zhu, Joseph E. Gonzalez, and Ion Stoica. 2024. From live data to high-quality benchmarks: The arena-hard pipeline. arXiv preprint, abs/2406.11939."
+  },
+  {
+    "event_id": 103,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.563",
+    "citation_key": "Parfenova and Pfeffer (2025)",
+    "hallucinated_citation": "Diana Parfenova et al. 2024. Automating qualitative analysis with llms. Proceedings of ACL 2024."
+  },
+  {
+    "event_id": 104,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.581",
+    "citation_key": "Yuan et al. (2025a)",
+    "hallucinated_citation": "Kevin Meng, Alex Andonian, David Bau, Yonatan Belinkov, and Fei-Fei Li. 2023. MEMIT: Massediting memory in a transformer. arXiv preprint arXiv:2302.04761."
+  },
+  {
+    "event_id": 105,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.690",
+    "citation_key": "Atri et al. (2025)",
+    "hallucinated_citation": "Peter Hase and Mohit Bansal. 2023. Compositional edits in language models. EMNLP."
+  },
+  {
+    "event_id": 106,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.813",
+    "citation_key": "Li et al. (2025g)",
+    "hallucinated_citation": "OpenAI. 2024. Gpt-4o: Scaling and performance improvements. arXiv preprint arXiv:2401.XXXXX."
+  },
+  {
+    "event_id": 107,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.861",
+    "citation_key": "Abootorabi et al. (2025)",
+    "hallucinated_citation": "Gunnar A Sigurdsson, Gul Varol, Giovanni Maria Farinella, et al. 2018. Charadesego: A dataset for egocentric video understanding. arXiv preprint arXiv:1804.09626."
+  },
+  {
+    "event_id": 108,
+    "venue": "acl-2025",
+    "paper_id": "2025.findings-acl.920",
+    "citation_key": "Li et al. (2025e)",
+    "hallucinated_citation": "Zihao Wang, Haowei Lin, Ruilin Yan, Xiangyu Wang, Jiaqi Li, Weiye Shi, Xiaojian Ma, Anji Liu, Yitao Liang, et al. 2024e. Optimizing inference-time reasoning in llms via retrieval-augmented reflection. arXiv preprint arXiv:2403.05313."
+  },
+  {
+    "event_id": 109,
+    "venue": "acl-2025",
+    "paper_id": "2025.gebnlp-1.7",
+    "citation_key": "Kononykhina et al. (2025)",
+    "hallucinated_citation": "Mingyuan Zhang, Jiayi Wang, and et al. 2024a. Retrieval-augmented icd coding: A two-stage system beats vanilla llms by 94 arXiv preprint arXiv:2401.12345."
+  },
+  {
+    "event_id": 110,
+    "venue": "acl-2025",
+    "paper_id": "2025.gem-1.6",
+    "citation_key": "Belz and Thomson (2025)",
+    "hallucinated_citation": "Anya Belz, Simon Mille, and Craig Thomson. 2025b. A taxonomy of quality criterion names and definitions for evaluating nlp systems in terms of standard comparable aspects of quality."
+  },
+  {
+    "event_id": 111,
+    "venue": "acl-2025",
+    "paper_id": "2025.iwslt-1.16",
+    "citation_key": "K. Roy et al. (2025)",
+    "hallucinated_citation": "Elizabeth Salesky, Ramon Sanabria, Alan W. Black, and Florian Metze. 2021. Exploring low-resource speechto-text translation across modalities. In Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics, pages 1134–1145."
+  },
+  {
+    "event_id": 112,
+    "venue": "acl-2025",
+    "paper_id": "2025.knowllm-1.4",
+    "citation_key": "Li (2025b)",
+    "hallucinated_citation": "Wei Zhang, Li Chen, and Nicolas Christin. 2022. Dynamic graph learning for cryptocurrency fraud detection. In IEEE International Conference on Blockchain and Cryptocurrency, pages 1–9."
+  },
+  {
+    "event_id": 113,
+    "venue": "acl-2025",
+    "paper_id": "2025.l2m2-1.7",
+    "citation_key": "Lasy et al. (2025)",
+    "hallucinated_citation": "Nikhil Stoehr, Kha Pham Doan, and Louis-Philippe Morency. 2023. Localizing memorization in transformer language models. arXiv preprint arXiv:2310.01331."
+  },
+  {
+    "event_id": 114,
+    "venue": "acl-2025",
+    "paper_id": "2025.llmsec-1.2",
+    "citation_key": "Sorkhpour et al. (2025)",
+    "hallucinated_citation": "Robert Shelby, Carl Vondrick, and 1 others. 2023. Can llms be safely released? evaluating the impact of red teaming on language model behavior. arXiv preprint arXiv:2304.10685."
+  },
+  {
+    "event_id": 115,
+    "venue": "acl-2025",
+    "paper_id": "2025.magmar-1.9",
+    "citation_key": "Li and Ke (2025a)",
+    "hallucinated_citation": "Rohit Gupta, Ankit Kumar, and Rahul Singh. 2022. Crisismm: A framework for multimodal crisis response. arXiv preprint arXiv:2203.01234."
+  },
+  {
+    "event_id": 116,
+    "venue": "acl-2025",
+    "paper_id": "2025.nlp4pi-1.17",
+    "citation_key": "Ding et al. (2025)",
+    "hallucinated_citation": "Zhijing Jin, Zhiheng Lyu, Yiwen Ding, Mrinmaya Sachan, Kun Zhang, Rada Mihalcea, and Bernhard Schoelkopf. 2022. AI Scholars: A dataset for NLPinvolved causal inference."
+  },
+  {
+    "event_id": 117,
+    "venue": "acl-2025",
+    "paper_id": "2025.realm-1.33",
+    "citation_key": "Punjwani and Heck (2025)",
+    "hallucinated_citation": "Harsha Nori, Andrew He, Chenguang Wang, Po-Sen Huang, Yejin Yang, Hao-Tong Tung, Shashank Singh, Hossein Hosseini, Mark Hughes, Matei Zaharia, and 1 others. 2023. Can language models teach weaker agents? training reasoning teachers that can explain their actions. arXiv preprint arXiv:2311.10731."
+  },
+  {
+    "event_id": 118,
+    "venue": "acl-2025",
+    "paper_id": "2025.sdp-1.14",
+    "citation_key": "Mandic et al. (2025)",
+    "hallucinated_citation": "Kai Sun, Rui Zhang, and Xiang Ren. 2022. FS-NER: A few-shot joint entity and relation extraction framework. In Findings of the Association for Computational Linguistics: ACL 2022, pages 4292–4303, Dublin, Ireland. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 119,
+    "venue": "acl-2025",
+    "paper_id": "2025.sdp-1.32",
+    "citation_key": "Carla and Uban (2025)",
+    "hallucinated_citation": "Xiang Deng, Han Zhang, Wenhao Yu, Clare Lee, and Mohit Bansal. 2024. Factscore 2.0: Dualencoder contrastive pre-training for factual consistency. Transactions of the Association for Computational Linguistics, 12:1–19."
+  },
+  {
+    "event_id": 120,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.106",
+    "citation_key": "Mondal and Sarkar (2025)",
+    "hallucinated_citation": "Xiao Tan and Yuan Jiang. 2021. Exploring idioms in question answering systems. In Proceedings of the 2021 Conference of the North American Chapter of the ACL."
+  },
+  {
+    "event_id": 121,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.135",
+    "citation_key": "Vaidyanathan et al. (2025b)",
+    "hallucinated_citation": "Pranav Goel, Shrey Agarwal, and Amir Hussain. 2021. Emotion intensity regression using transformers and loss function optimization. In ACL 2021 Findings, pages 1432–1440."
+  },
+  {
+    "event_id": 122,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.142",
+    "citation_key": "Kesanam et al. (2025)",
+    "hallucinated_citation": "Shailza Choudhary and Tanmoy Chakraborty. 2020. A hybrid feature extraction approach for multi-label emotion classification. IEEE Transactions on Affective Computing."
+  },
+  {
+    "event_id": 123,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.151",
+    "citation_key": "Alberts et al. (2025)",
+    "hallucinated_citation": "Jian Wu, Junwei Xie, Bing Tang, Hongyan Yan, and Lijun Wang. 2022. Dense passage retrieval: A study of the representations of multiple sentences in a passage. In Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (ACL 2022)."
+  },
+  {
+    "event_id": 124,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.195",
+    "citation_key": "Matheny et al. (2025)",
+    "hallucinated_citation": "Silvio Ricardo Cordeiro, Aline Villavicencio, Marco Idiart, and Carlos Ramisch. 2019. A computational model of nominal compound compositionality. In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL), pages 2762–2773. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 125,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.231",
+    "citation_key": "Khatoon et al. (2025)",
+    "hallucinated_citation": "Vered Shwartz and Ido Dagan. 2018. A sequential neural model for multiword expression identification. In Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics (NAACL-HLT)."
+  },
+  {
+    "event_id": 126,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.243",
+    "citation_key": "Nadeem et al. (2025)",
+    "hallucinated_citation": "Frank A Acheampong, Henry Nunoo-Mensah, and Wei Chen. 2020. Transformer models for text-based emotion detection: A comparative analysis. arXiv preprint arXiv:2004.13704."
+  },
+  {
+    "event_id": 127,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.250",
+    "citation_key": "Aryal and Pant (2025)",
+    "hallucinated_citation": "Alec Radford, Karthik Narasimhan, Tim Salimans, and Ilya Sutskever. 2018. Improving language understanding by generative pre-training. arXiv preprint arXiv:1812.01813."
+  },
+  {
+    "event_id": 128,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.266",
+    "citation_key": "Wan et al. (2025)",
+    "hallucinated_citation": "Danqi Chen, Pengcheng Xie, Shiyu Wang, et al. 2020. Tabfact: A large-scale dataset for table-based fact verification. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL)."
+  },
+  {
+    "event_id": 129,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.268",
+    "citation_key": "Chen (2025)",
+    "hallucinated_citation": "Min Li, Liangyou Li, and Philipp Koehn. 2022. Lowfrequency entity translation in neural machine translation. In Findings of the Association for Computational Linguistics: ACL 2022, pages 3021–3033."
+  },
+  {
+    "event_id": 130,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.27",
+    "citation_key": "S et al. (2025b)",
+    "hallucinated_citation": "S. Kumar et al. 2023. Sentilex: Enhancing emotion classification with lexicon-based methods. In ACL Workshop on Sentiment Analysis."
+  },
+  {
+    "event_id": 131,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.278",
+    "citation_key": "Huang and Cui (2025)",
+    "hallucinated_citation": "Linhao Zhang, Shuai Wang, and Bing Liu. 2018. Learning to detect multi-label emotions in tweets with label co-occurrence and dependency. In Proceedings of the 27th International Conference on Computational Linguistics, pages 3299–3309."
+  },
+  {
+    "event_id": 132,
+    "venue": "acl-2025",
+    "paper_id": "2025.semeval-1.37",
+    "citation_key": "Cui (2025)",
+    "hallucinated_citation": "Yuqing Zhang, Yansong Feng, Yinwen Zhang, and Shujie Liu. 2021. Attention-based multi-label emotion classification with label-wise attention mechanism. In Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics (ACL 2021), pages 5943–5952."
+  },
+  {
+    "event_id": 133,
+    "venue": "acl-2025",
+    "paper_id": "2025.sicon-1.12",
+    "citation_key": "Tiwari (2025)",
+    "hallucinated_citation": "Yixuan Zhang, Leo Cheng, Lichang Zhang, Lu Liu, Jingcheng Li, Haoning Liu, and Z G Xu. 2024. Alert: A comprehensive safety benchmark suite for large language models. Preprint, arXiv:2402.12441."
+  },
+  {
+    "event_id": 134,
+    "venue": "acl-2025",
+    "paper_id": "2025.sigtyp-1.15",
+    "citation_key": "Li and Ke (2025b)",
+    "hallucinated_citation": "Kevin Zhang and 1 others. 2022. Code meets prose: Syntactic patterns in cryptocurrency whitepapers. In LAW@ACL. Manual analysis of 200 whitepapers showing SVO/SOV mixing."
+  },
+  {
+    "event_id": 135,
+    "venue": "acl-2025",
+    "paper_id": "2025.trl-1.16",
+    "citation_key": "Li (2025c)",
+    "hallucinated_citation": "Haoyang Ding, Zijian Liu, Xiao Chen, Lidong Bing, and Wai Lam. 2021. Financial table processing with pretrained language models. EMNLP."
+  },
+  {
+    "event_id": 136,
+    "venue": "acl-2025",
+    "paper_id": "2025.unlp-1.10",
+    "citation_key": "Kyslyi et al. (2025a)",
+    "hallucinated_citation": "Marcos Zampieri, Shervin Malmasi, Preslav Nakov, Ahmed Ali, and Stephan Vogel. 2017. Arabic dialect identification for the dsl 2017 shared task. In Proceedings of the Fourth Workshop on NLP for Similar Languages, Varieties and Dialects (VarDial)."
+  },
+  {
+    "event_id": 137,
+    "venue": "acl-2025",
+    "paper_id": "2025.unlp-1.12",
+    "citation_key": "Kyslyi et al. (2025b)",
+    "hallucinated_citation": "Firoj Alam, Shaden Shaar, Alex Nikolov, and 1 others. 2021. A survey on nlp for fake news detection. Computational Linguistics, 47(4):905–960."
+  },
+  {
+    "event_id": 138,
+    "venue": "acl-2025",
+    "paper_id": "2025.woah-1.21",
+    "citation_key": "Boudraa et al. (2025)",
+    "hallucinated_citation": "Hande Kartal, Dilek Hakkani-Tür, and Gokhan Tur. 2022. Span-based detection of biased statements in news articles. In Proceedings of the 2022 Conference on Computational Linguistics. COLING."
+  },
+  {
+    "event_id": 139,
+    "venue": "acl-2025",
+    "paper_id": "2025.woah-1.36",
+    "citation_key": "Schirmer et al. (2025)",
+    "hallucinated_citation": "Xing Jiang, Hugo Touvron, Ludovic Denoyer, Hervé Jégou, and Guillaume Lample. 2023. Mistral 7b: A small model that thinks big. arXiv preprint arXiv:2310.06825."
+  },
+  {
+    "event_id": 140,
+    "venue": "acl-2025",
+    "paper_id": "2025.xllm-1.25",
+    "citation_key": "Pham Hoang Le et al. (2025)",
+    "hallucinated_citation": "Micha Livne, Roberto Dessì, and Douwe Kiela. 2023. How to train a large language model to be a reliable information extraction system. Computing Research Repository, arXiv:2309.16396. Version 3."
+  },
+  {
+    "event_id": 141,
+    "venue": "acl-2025",
+    "paper_id": "2025.xllm-1.3",
+    "citation_key": "Li et al. (2025k)",
+    "hallucinated_citation": "Yujia Zhang, Xiaobo Liu, and Zhenhua Li. 2020. Graphbased hierarchical relationships for text representation. arXiv preprint arXiv:2007.12345."
+  },
+  {
+    "event_id": 142,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.arabicnlp-main.20",
+    "citation_key": "Bouchekif et al. (2025)",
+    "hallucinated_citation": "Faiza Qamar, Seemab Latif, and Rabia Latif. 2024. A benchmark dataset with larger context for non-factoid question answering over islamic text. arXiv preprint arXiv:2409.09844."
+  },
+  {
+    "event_id": 143,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.babylm-main.35",
+    "citation_key": "Fusco et al. (2025)",
+    "hallucinated_citation": "Leonie Weissweiler, Valentin Hofmann, David Mortensen, and Janet Pierrehumbert. 2023. Evaluating morphological generalization with wug tests. arXiv preprint. ArXiv:230x.xxxxx."
+  },
+  {
+    "event_id": 144,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.babylm-main.36",
+    "citation_key": "Yoshida et al. (2025)",
+    "hallucinated_citation": "Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, and Ilya Sutskever. 2019. Language models are unsupervised multitask learners. Preprint, arXiv:1901.04513."
+  },
+  {
+    "event_id": 145,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.codi-1.4",
+    "citation_key": "Jeon and Strube (2025)",
+    "hallucinated_citation": "Kevin Clark, Urvashi Khandelwal, Omer Levy, and Christopher D. Manning. 2019. BERT: A study of attention in BERT. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP), pages 5717–5726, Hong Kong, China. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 146,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.codi-1.5",
+    "citation_key": "Ahmad and Kakudi (2025)",
+    "hallucinated_citation": "Yuan Lan, Chao Huang, Wayne Xin Zhao, and Jun Li. 2024. Cola: Collaborative role infused multiagent debate framework for stance detection. arXiv preprint arXiv:2403.01234."
+  },
+  {
+    "event_id": 147,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-demos.24",
+    "citation_key": "Jang et al. (2025)",
+    "hallucinated_citation": "Rong Chen, Siyun Zhang, Yiyi Zheng, Qiuhua Yu, and Chu-huai Wang. 2025. Enhancing treatment decision-making for low back pain: A novel framework integrating large language models with retrieval-augmented generation technology. arXiv preprint arXiv:2501.34567."
+  },
+  {
+    "event_id": 148,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-demos.27",
+    "citation_key": "Liu et al. (2025f)",
+    "hallucinated_citation": "Jihan Zhu, Zhizheng Lin, Jun Gao, Zhaoxuan Zhou, Yaodong Zhang, Zhaofan Liu, Ceyao Zheng, Cheng Li, Zhaokai Wang, Zili Wang, and 1 others. 2024. A survey of ai agent evaluation: A hundred unsolved problems and a one-stop open-source library. arXiv preprint arXiv:2406.09844."
+  },
+  {
+    "event_id": 149,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-demos.51",
+    "citation_key": "Chao et al. (2025)",
+    "hallucinated_citation": "Jinhao Liang, Yihang Chen, Haozheng Zhang, and 1 others. 2025. Surveyx: An end-to-end solution for automated survey generation. arXiv preprint arXiv:2501.12345."
+  },
+  {
+    "event_id": 150,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.123",
+    "citation_key": "Khabiri et al. (2025)",
+    "hallucinated_citation": "Takeshi Kojima, Shinn Yao, Jinyi Zhao, Xiang Ren, et al. 2023. ToolLLM: Facilitating LLMs to master 16000+ real-world APIs. arXiv preprint arXiv:2312.11568."
+  },
+  {
+    "event_id": 151,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.146",
+    "citation_key": "Zhang (2025)",
+    "hallucinated_citation": "Emmanouil Panousis and Tom Rainforth. 2022. A principled and unified framework for bayesian optimal experimental design. arXiv preprint arXiv:2202.04647."
+  },
+  {
+    "event_id": 152,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.168",
+    "citation_key": "Ethiraj et al. (2025)",
+    "hallucinated_citation": "Zhen Li and 1 others. 2023. Towards general text embeddings with mixture of experts. Preprint, arXiv:2311.05723. https://arxiv.org/abs/2311.05723."
+  },
+  {
+    "event_id": 153,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.182",
+    "citation_key": "Yu et al. (2025b)",
+    "hallucinated_citation": "Haotian Luo, Li Shen, Haiying He, Yibo Wang, Shiwei Liu, Wei Li, Naiqiang Tan, Xiaochun Cao, and Dacheng Tao. 2025. Adaptthink: Llm can learn when to think. https://arxiv.org/abs/2501.12570."
+  },
+  {
+    "event_id": 154,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.187",
+    "citation_key": "Beyranvand et al. (2025)",
+    "hallucinated_citation": "Jun Xu, Fan Wang, and Shuo Chen. 2022. Automated question-answering for vehicle manuals using nlp and knowledge graphs. IEEE Transactions on Intelligent Transportation Systems."
+  },
+  {
+    "event_id": 155,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.189",
+    "citation_key": "Chawla et al. (2025)",
+    "hallucinated_citation": "Yifan Liu, Jiaqi Wang, and Zhi Zhang. 2024. Bias in ai investment advice: An analysis of home bias in large language models. arXiv preprint arXiv:2209.04538."
+  },
+  {
+    "event_id": 156,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.69",
+    "citation_key": "Azeez et al. (2025)",
+    "hallucinated_citation": "Juho Kim et al. 2023. Does gpt-4 pass the bar exam? a case study on the performance of large language models on legal multiple choice questions. In Proceedings of the 2023 Conference of the North American Chapter of the Association for Computational Linguistics."
+  },
+  {
+    "event_id": 157,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.70",
+    "citation_key": "Swamy et al. (2025)",
+    "hallucinated_citation": "Florian Schuster et al. 2023. Getml: Pareto-based feature learning for machine learning applications. arXiv preprint arXiv:XXXX.XXXXX."
+  },
+  {
+    "event_id": 158,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.8",
+    "citation_key": "Bougie and Watanabe (2025)",
+    "hallucinated_citation": "Anonymous and 1 others. 2023b. Is llm a reliable reviewer? a comprehensive evaluation of llm on reviewrevision multiple-choice questions. ACL Anthology 2024.lrec-main.816."
+  },
+  {
+    "event_id": 159,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-industry.96",
+    "citation_key": "Joshi et al. (2025a)",
+    "hallucinated_citation": "Siva Reddy, Daniel Khashabi, Benjamin Lo, Chandra Bhagavatula, Maarten Sap, and Yejin Choi. 2023. Do large language models understand instructions? arXiv preprint arXiv:2301.01193."
+  },
+  {
+    "event_id": 160,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1021",
+    "citation_key": "Pi et al. (2025)",
+    "hallucinated_citation": "Ziyang Xiong et al. 2024. Llava-critic: Visual instruction tuning with feedback. arXiv preprint arXiv:2402.12345."
+  },
+  {
+    "event_id": 161,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1070",
+    "citation_key": "Zhang et al. (2025d)",
+    "hallucinated_citation": "Yiming Zhang and Zhouhui Lian. 2024a. Brush your text: Enhancing text rendering in diffusion models with attention map interventions. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL)."
+  },
+  {
+    "event_id": 162,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1097",
+    "citation_key": "Zhang and Zhou (2025)",
+    "hallucinated_citation": "X. Li, P. Wang, and Y. Chen. 2020. Iterative transformer: Recurrent attention updates for sequence modeling. arXiv preprint arXiv:2010.02536."
+  },
+  {
+    "event_id": 163,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1119",
+    "citation_key": "Zhang et al. (2025e)",
+    "hallucinated_citation": "Chenyan Yu, Lee Xiong, and Jamie Callan. 2022. A survey on conversational dense retrieval: Methods and challenges. arXiv preprint arXiv:2201.08452."
+  },
+  {
+    "event_id": 164,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1167",
+    "citation_key": "Zhang et al. (2025b)",
+    "hallucinated_citation": "Zhengbao Jiang, Frank F Xu, Jun Araki, and Graham Neubig. 2024. Flare: Active retrieval augmentation for hallucination mitigation. arXiv preprint arXiv:2401.07019."
+  },
+  {
+    "event_id": 165,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1190",
+    "citation_key": "Yi et al. (2025)",
+    "hallucinated_citation": "Bogdan Gliwa, Iwona Mochol, Michał Biesek, and Aleksander Wawer. 2019. Samsum corpus: A human-annotated dialogue summary dataset. arXiv preprint arXiv:1911.12237."
+  },
+  {
+    "event_id": 166,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1232",
+    "citation_key": "Nyandwi et al. (2025)",
+    "hallucinated_citation": "Wenxuan Zhang, Da Yin, Zhong Ding, and Radu Soricut. 2023. M3exam: A multilingual, multimodal exam-style qa benchmark. arXiv preprint arXiv:2306.05179."
+  },
+  {
+    "event_id": 167,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1235",
+    "citation_key": "Rafiei Asl et al. (2025)",
+    "hallucinated_citation": "Mark Russinovich, Jingwen Cai, Yifan Hou, Yuxiao Jiang, Yiping Jiang, Jieyu Kang, Prithviraj Kang, Urvashi Khandelwal, Nitish Khurana, Pang Wei Koh, et al. 2024. Crescendo: Towards realistic redteaming of llms with language agents. arXiv preprint arXiv:2402.13249."
+  },
+  {
+    "event_id": 168,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1337",
+    "citation_key": "Dumitru et al. (2025)",
+    "hallucinated_citation": "Jia Chen and Hao Xu. 2023. Parallel decoding with speculative sampling for large language models. arXiv preprint arXiv:2306.15478."
+  },
+  {
+    "event_id": 169,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1345",
+    "citation_key": "Park et al. (2025)",
+    "hallucinated_citation": "Rodrigo Nogueira and Jimmy Lin. 2019. From doc2query to doctttttquery. arXiv preprint arXiv:1904.08375."
+  },
+  {
+    "event_id": 170,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.138",
+    "citation_key": "Li et al. (2025b)",
+    "hallucinated_citation": "Weixi Tong and Tianyi Zhang. 2024. Codejudge: Evaluating code generation with large language models. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing, pages 20032–20051."
+  },
+  {
+    "event_id": 171,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1429",
+    "citation_key": "Bohdal et al. (2025)",
+    "hallucinated_citation": "Aliaksei Severyn, Eric Emil Malmi, Jonathan Stephen Mallinson, Sascha Rothe, and Sebastian Krause. 2021. Grammatical error correction using large multilingual language models. In ACL."
+  },
+  {
+    "event_id": 172,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.145",
+    "citation_key": "Borah et al. (2025)",
+    "hallucinated_citation": "Junnan Li, Ziqing Wang, Yilun Xu, et al. 2024. Alignment Degradation in LLMs: Measuring, Visualizing, and Mitigating Latent Drift. arXiv preprint arXiv:2401.04200."
+  },
+  {
+    "event_id": 173,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1455",
+    "citation_key": "Kryklyvets et al. (2025)",
+    "hallucinated_citation": "S. Thoppilan and et al. 2023. Gemini: A unified multimodal large language model. arXiv preprint arXiv:2303.06601."
+  },
+  {
+    "event_id": 174,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1457",
+    "citation_key": "Srivastava (2025)",
+    "hallucinated_citation": "Wei Xu, Yulia Tsvetkov, and Alan Black. 2022. AI for language learning: Conversational agents and personalized feedback. Transactions of the Association for Computational Linguistics (TACL), 10:1–15."
+  },
+  {
+    "event_id": 175,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1466",
+    "citation_key": "Roh et al. (2025)",
+    "hallucinated_citation": "Amanpreet Singh, Yujia Wang, Yulia Tsvetkov, and Percy Liang. 2024. Global-mmlu: Evaluating cultural and linguistic biases in multilingual language understanding. arXiv preprint arXiv:2412.03304."
+  },
+  {
+    "event_id": 176,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1521",
+    "citation_key": "Gallifant et al. (2025)",
+    "hallucinated_citation": "Trenton Bricken, Jonathan Marcus, Siddharth MishraSharma, Meg Tong, Ethan Perez, Mrinank Sharma, Kelley Rivoire, and Thomas Henighan. 2023. Towards monosemanticity: Decomposing language models with dictionary learning. ArXiv, abs/2309.08600."
+  },
+  {
+    "event_id": 177,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1538",
+    "citation_key": "Jin et al. (2025)",
+    "hallucinated_citation": "Liang Liu, Marc Brockschmidt, Vivek Murali, and et al. 2024. The meta llm compiler: A suite of opensource models for code optimization. arXiv preprint arXiv:2407.02524."
+  },
+  {
+    "event_id": 178,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1556",
+    "citation_key": "Dhanraj and Eliasmith (2025)",
+    "hallucinated_citation": "Jianfeng Wang, Fei Huang, and 1 others. 2023. Efficient fine-tuning of large language models with lora. arXiv preprint arXiv:2303.01234."
+  },
+  {
+    "event_id": 179,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1558",
+    "citation_key": "Song et al. (2025a)",
+    "hallucinated_citation": "Mor Geva, Tal Schuster, Jonathan Berant, and Omer Levy. 2023. Token recycling: Making llms faster and more data-efficient. arXiv preprint arXiv:2310.02548."
+  },
+  {
+    "event_id": 180,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1582",
+    "citation_key": "Liu et al. (2025e)",
+    "hallucinated_citation": "Sabine Ploux and Hong Ji. 2003. Semantic spaces: Modeling the distribution of word senses with unsupervised learning techniques. Computational Linguistics, 29(2):259–275."
+  },
+  {
+    "event_id": 181,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1611",
+    "citation_key": "Yuan et al. (2025b)",
+    "hallucinated_citation": "Laura A Banarescu, Claire Bonial, Sheila Condon, Emily Faries, Jon Niekrasz, and Tim O’ Connor. 2018. Amr for multi-document summarization. In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers), pages 577–583."
+  },
+  {
+    "event_id": 182,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1629",
+    "citation_key": "Sadia et al. (2025)",
+    "hallucinated_citation": "Srivatsan Sundar, Dhruv Jain, Yuwei Zhang, and H. V. Jagadish. 2024. gtbls: Generating tables from text by learning table structures. In Proceedings of the 2024 Conference of the Association for Computational Linguistics."
+  },
+  {
+    "event_id": 183,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.164",
+    "citation_key": "Xiao et al. (2025)",
+    "hallucinated_citation": "Kai Jiang, Hao Liu, and Rodney Brooks. 2022. Trustperformance paradox in industrial hri: Empirical evidence from warehouse robotics. arXiv preprint arXiv:2208.14637."
+  },
+  {
+    "event_id": 184,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1641",
+    "citation_key": "Kassem et al. (2025)",
+    "hallucinated_citation": "Baolin Peng and 1 others. 2024. Efficient model editing at scale. arXiv preprint arXiv:2401.05911."
+  },
+  {
+    "event_id": 185,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1648",
+    "citation_key": "Mohammadi et al. (2025)",
+    "hallucinated_citation": "Swaroop Mishra, Daniel Khashabi, Chitta Baral, and Hannaneh Hajishirzi. 2022. Cross-task generalization via natural language instructions. In Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 3470–3487, Dublin, Ireland. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 186,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1777",
+    "citation_key": "Gao et al. (2025)",
+    "hallucinated_citation": "Jack FitzGerald, Ryan Cotterell, Bahadir Avci, Sebastian Ruder, Graham Neubig, Melvin Johnson, and Orhan Firat. 2022. Massive: A 51-language multilingual dataset for task oriented semantic parsing. arXiv preprint arXiv:2204.08582."
+  },
+  {
+    "event_id": 187,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.1806",
+    "citation_key": "He et al. (2025b)",
+    "hallucinated_citation": "A. Kirstain and 1 others. 2023. Pick-a-pic: A dataset for evaluating the robustness of vision-language models. Preprint, arXiv:2305.01569."
+  },
+  {
+    "event_id": 188,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.192",
+    "citation_key": "Liu et al. (2025d)",
+    "hallucinated_citation": "Rishi Taori et al. 2023. Alpaca: A 175b-parameter model for instruction following. ArXiv preprint arXiv:2303.11366."
+  },
+  {
+    "event_id": 189,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.207",
+    "citation_key": "He et al. (2025a)",
+    "hallucinated_citation": "Shuang Chen, Yang Liu, and Erik Cambria. 2023. Knowledge-enhanced aspect-based sentiment analysis with external commonsense graphs. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (ACL 2023), pages 13567–13579. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 190,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.319",
+    "citation_key": "Li et al. (2025f)",
+    "hallucinated_citation": "Kevin Lin, Ben Tan, Swabha Swayamdipta, Noah A. Smith, and Yejin Choi. 2019b. Ropes: Reading comprehension over paragraphs. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)."
+  },
+  {
+    "event_id": 191,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.348",
+    "citation_key": "Khandelwal et al. (2025)",
+    "hallucinated_citation": "Alex Mallen, Zexuan Zhang, Xinyu Liu, Yichong Wu, Yiming Zhang, and William Yang Wang. 2023b. When not to trust language models: Investigating effectiveness of parametric and retrieval-based knowledge. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 1234–1245."
+  },
+  {
+    "event_id": 192,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.394",
+    "citation_key": "Xu et al. (2025c)",
+    "hallucinated_citation": "Todor Mihaylov and 1 others. 2018. Openbookqa: Factual knowledge assessment in question answering. EMNLP."
+  },
+  {
+    "event_id": 193,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.397",
+    "citation_key": "Zheng et al. (2025a)",
+    "hallucinated_citation": "Aurko Roy, Mohammad Saffar, Ashish Vaswani, and David Grangier. 2021b. Efficient routing transformers: Dynamic token interaction models for natural language processing. arXiv preprint arXiv:2003.05997."
+  },
+  {
+    "event_id": 194,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.468",
+    "citation_key": "Tang et al. (2025b)",
+    "hallucinated_citation": "Justin Fu, Kelvin Zhang, Utkarsh Sanyal, Lantao Yu, Collin Moses, Fan Yang, Stefano Ermon, and Zhibin Zhao. 2023. Driving with reasoning: Reinforcement learning with generalist language models for interpretable policies. arXiv preprint arXiv:2303.00745."
+  },
+  {
+    "event_id": 195,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.482",
+    "citation_key": "Tanjim et al. (2025)",
+    "hallucinated_citation": "Meta AI. 2024. Llama 3.2: Advancing open-weight language models. ArXiv preprint arXiv:2408.00001."
+  },
+  {
+    "event_id": 196,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.501",
+    "citation_key": "Wang et al. (2025f)",
+    "hallucinated_citation": "Xinyu Fan, Li Zheng, Bing Yu, Yifan Liu, Yichi Zhang, Yu Zhang, Hao Tang, Yikai Wang, Weinan Chen, Yizhou Wang, and 1 others. 2023. Urban identityaware geo-reasoning in street views. arXiv preprint arXiv:2311.16456."
+  },
+  {
+    "event_id": 197,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.524",
+    "citation_key": "Saba and Skiena (2025)",
+    "hallucinated_citation": "Markus Freitag, Yaser Al-Onaizan, Shuo Sun Ma, and 1 others. 2022a. High-quality low-resource machine translation: A new benchmark. In Findings of EMNLP."
+  },
+  {
+    "event_id": 198,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.527",
+    "citation_key": "Yu et al. (2025a)",
+    "hallucinated_citation": "Wei Zhang, Ming Li, Hao Wang, and Yang Liu. 2024b. Deepseekmath: Scalable math pre-training and group relative policy optimization for mathematical reasoning. arXiv preprint arXiv:2402.03300."
+  },
+  {
+    "event_id": 199,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.528",
+    "citation_key": "Chen et al. (2025f)",
+    "hallucinated_citation": "Salah Lhoussaine, Georgios Tziantzioulis, Michael B. Sullivan, Vilas Sridharan, Nathan DeBardeleben, Christian Engelmann, and Simranjit Singh. 2024. A first look at bfloat16 soft-error resilience in large language models. Preprint, arXiv:2412.07192."
+  },
+  {
+    "event_id": 200,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.548",
+    "citation_key": "Wang et al. (2025a)",
+    "hallucinated_citation": "Harsha Nori, Allison Webster, Matthew McInnis, et al. 2023b. Medprompt: Large language models are reasoning engines with structured prompts. Preprint, arXiv:2307.13880."
+  },
+  {
+    "event_id": 201,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.562",
+    "citation_key": "Shihab et al. (2025)",
+    "hallucinated_citation": "Szymon Tworkowski, Konrad Przybysz, Tomasz Korbak, Pedro Rodriguez, Wojciech Rozemłyn, Kamil Rakowski, Maciej Grzelak, Albert Webson, Maciej Szafraniec, Robin Sorsch, and 1 others. 2024. Mambaformer: Efficient language modeling with selective state spaces and attention. arXiv preprint arXiv:2312.00752."
+  },
+  {
+    "event_id": 202,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.584",
+    "citation_key": "Wang et al. (2025d)",
+    "hallucinated_citation": "DeepSeek. 2025. Deepseek r1: Towards deep reinforcement learning for language models. arXiv preprint arXiv:2501.12948."
+  },
+  {
+    "event_id": 203,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.614",
+    "citation_key": "Lv et al. (2025)",
+    "hallucinated_citation": "Yifan Xu, Xiaoyu Liu, Baolin Peng, and et al. 2024. Evaluating the instruction-following robustness of large language models. In Proceedings of EMNLP 2024."
+  },
+  {
+    "event_id": 204,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.619",
+    "citation_key": "Tian et al. (2025)",
+    "hallucinated_citation": "Jing Qian and et al. 2018. Neural network-based fake news detection: Learning to identify deceptive content. Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics."
+  },
+  {
+    "event_id": 205,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.637",
+    "citation_key": "Kang et al. (2025)",
+    "hallucinated_citation": "Hang Yu, Tianle Li, and et al. 2025. Dapo: Data-aware policy optimization for open-source llm alignment. arXiv preprint arXiv:2503.04111."
+  },
+  {
+    "event_id": 206,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.789",
+    "citation_key": "Kim et al. (2025a)",
+    "hallucinated_citation": "Mor Geva, Daniel Khashabi, Elad Segal, Jonathan Berant, and Ido Dagan. 2021. Aristotle: A dataset for focused logical reasoning. In Findings of the Association for Computational Linguistics: EMNLP 2021, pages 1–14, Punta Cana, Dominican Republic. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 207,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.813",
+    "citation_key": "Zhang et al. (2025f)",
+    "hallucinated_citation": "Mark Finlayson and 1 others. 2023. Causal analysis of language model behavior with induced interventions. arXiv preprint arXiv:2301.12928."
+  },
+  {
+    "event_id": 208,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.830",
+    "citation_key": "Liu et al. (2025a)",
+    "hallucinated_citation": "Yixin Nie, Jing Wang, Mohit Bansal, and Kai-Wei Chang. 2020. Adversarial natural language inference. In Proceedings of ACL."
+  },
+  {
+    "event_id": 209,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.831",
+    "citation_key": "Liu et al. (2025b)",
+    "hallucinated_citation": "Paola Espinosa, Sarah Kadi, Stefanie Kamps, and et al. 2017. Gender differences in empathy-related processes: Exploring behavioral and neurophysiological correlates. Psychoneuroendocrinology, 85:34–43."
+  },
+  {
+    "event_id": 210,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.835",
+    "citation_key": "Luo et al. (2025a)",
+    "hallucinated_citation": "Xuezhe Li and Xiaodan Sun. 2020. Dice loss for dataimbalanced nlp tasks: Application to named entity recognition. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, pages 4653–4661."
+  },
+  {
+    "event_id": 211,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.841",
+    "citation_key": "Rivlin-Angert and Mor-Lan (2025)",
+    "hallucinated_citation": "David Hebron, Avi Shmidman, and Moshe Koppel. 2023. Hero: A hebrew roberta model for hebrew nlp tasks. Preprint, arXiv:2309.12345."
+  },
+  {
+    "event_id": 212,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.848",
+    "citation_key": "Nafee et al. (2025)",
+    "hallucinated_citation": "Linyong Lu, Qingxiu Zhang, Xiang Li, and Jingjing Liu. 2022. Promptpg: Prompting for policy gradient training. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP)."
+  },
+  {
+    "event_id": 213,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.853",
+    "citation_key": "Mundada et al. (2025)",
+    "hallucinated_citation": "Lukasz Czajka, Malihe Alikhani, Patrick Verga, and Yonatan Belinkov. 2024b. Musictheory-bench. ArXiv preprint arXiv:2410.02084."
+  },
+  {
+    "event_id": 214,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.855",
+    "citation_key": "Jiang et al. (2025)",
+    "hallucinated_citation": "Victor Zhong, Chandra Bhagavatula, Ronan Le Bras, Yejin Choi, and Noah A Smith. 2022. Analytical reasoning of text: Unifying machine reading and logical reasoning. In Findings of the Association for Computational Linguistics: NAACL 2022, pages 2307–2323."
+  },
+  {
+    "event_id": 215,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.858",
+    "citation_key": "Trifan et al. (2025)",
+    "hallucinated_citation": "Liang Pan, Lei Zhang, and Zhenzhong Yang. 2023. Can chatgpt do zero-shot dialogue state tracking? In arXiv preprint arXiv:2302.01180."
+  },
+  {
+    "event_id": 216,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.880",
+    "citation_key": "Wang et al. (2025c)",
+    "hallucinated_citation": "Weijie Chen, Yizhe Zhang, Qian Wu, and 1 others. 2024. Internvl: Scaling up vision-language pretraining with multimodal reinforcement learning. arXiv preprint arXiv:2402.00028."
+  },
+  {
+    "event_id": 217,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.938",
+    "citation_key": "Chen et al. (2025a)",
+    "hallucinated_citation": "Xiaoxi Zhong et al. 2023. Agentverse: Facilitating multi-agent collaboration and exploration with llms. arXiv preprint arXiv:2309.07864."
+  },
+  {
+    "event_id": 218,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.952",
+    "citation_key": "Zhou et al. (2025b)",
+    "hallucinated_citation": "Shengding Hu, Yuge Tu, Xu Han, Chaoqun He, Ganqu Cui, Xiang Long, Zhi Zheng, Yewei Fang, Yuxiang Huang, Weilin Zhao, and 1 others. 2024. Minicpm: Unveiling the potential of small language models with warmup-stable-decay learning rate scheduler. arXiv preprint arXiv:2404.06395."
+  },
+  {
+    "event_id": 219,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.emnlp-main.986",
+    "citation_key": "Bhendawade et al. (2025)",
+    "hallucinated_citation": "Yi Tay, Dara Bahri, Donald Metzler, et al. 2022. Scale efficiently: Insights from training and scaling large language models. arXiv preprint arXiv:2210.03863."
+  },
+  {
+    "event_id": 220,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1052",
+    "citation_key": "Kim et al. (2025c)",
+    "hallucinated_citation": "H. Yang and K. Li. 2023. Boostaug: Hybrid instance filtering framework for boosting text augmentation. In Findings of the Association for Computational Linguistics: ACL 2023."
+  },
+  {
+    "event_id": 221,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1074",
+    "citation_key": "Aastik et al. (2025)",
+    "hallucinated_citation": "Xianzhi Li, Zihang Dai, and 1 others. 2022. Branchtuning: Efficient fine-tuning of pre-trained vision models via branching. arXiv preprint arXiv:2202.06924."
+  },
+  {
+    "event_id": 222,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1082",
+    "citation_key": "Maskey et al. (2025)",
+    "hallucinated_citation": "Rodrigo Gomez et al. 2018. Ciphergan: Unsupervised cipher cracking using gans. arXiv　preprint arXiv:1801.04883."
+  },
+  {
+    "event_id": 223,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1100",
+    "citation_key": "Yang et al. (2025a)",
+    "hallucinated_citation": "Mo Yu, Yisi Sang, Kangsheng Pu, Zekai Wei, Han Wang, Jing Li, and Jie Zhou. 2022. Character understanding in movies: A benchmark for movie character analysis. arXiv preprint arXiv:2211.04684."
+  },
+  {
+    "event_id": 224,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1118",
+    "citation_key": "Wang et al. (2025b)",
+    "hallucinated_citation": "Zhen Chiang, Noah Shinn, Siyuan Zhuang, and 1 others. 2023. Vicuna: An open-source chatbot impressing gpt-4 with 90%* chatgpt quality. Preprint, arXiv:2304.05335."
+  },
+  {
+    "event_id": 225,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1144",
+    "citation_key": "Bn et al. (2025)",
+    "hallucinated_citation": "Suyeon Lee, Sunghwan Kim, et al. 2024b. Counselingeval: Towards evaluating the quality of llmbased psychological counseling. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL)."
+  },
+  {
+    "event_id": 226,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.118",
+    "citation_key": "Zeng et al. (2025)",
+    "hallucinated_citation": "X. Du et al. 2022a. Grit1: A grammar error correction dataset for llm evaluation. In Proceedings of EMNLP 2022. X. Du et al. 2022b. Grit2: Extending grammar error correction for multilingual llms. In Findings of EMNLP 2022."
+  },
+  {
+    "event_id": 227,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1196",
+    "citation_key": "Zheng et al. (2025c)",
+    "hallucinated_citation": "OpenAI. 2023a. Gpt-4: Openai’s generative pre-trained transformer 4 model. Preprint, arXiv:arXiv:2301.00000."
+  },
+  {
+    "event_id": 228,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1286",
+    "citation_key": "Kim et al. (2025f)",
+    "hallucinated_citation": "Baptiste Roziere, Gautier Izacard, Jan Leike Botha, and Others. 2023. Code LLaMA: Large language models for code. Preprint, arXiv:2308.08545."
+  },
+  {
+    "event_id": 229,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1343",
+    "citation_key": "Saeed et al. (2025)",
+    "hallucinated_citation": "Damai Bi, Kunhao Lv, Xiang Ji, Yining Wang, Zecheng Lyu, Zihan Du, et al. 2024. Deepseek: Advancing ai through enhanced language models. arXiv preprint arXiv:2401.14196."
+  },
+  {
+    "event_id": 230,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1344",
+    "citation_key": "Kwak et al. (2025)",
+    "hallucinated_citation": "Aditya Maharana and 1 others. 2024. Locomo: Long context modeling benchmark for conversational agents. arXiv preprint arXiv:2402.13968."
+  },
+  {
+    "event_id": 231,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1359",
+    "citation_key": "Akra et al. (2025)",
+    "hallucinated_citation": "Ling Chen, Ming Zhao, and 1 others. 2024. Efficient active learning for biomedical image segmentation with minimal annotations. arXiv preprint arXiv:2405.01701."
+  },
+  {
+    "event_id": 232,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.1384",
+    "citation_key": "Ji and Lu (2025)",
+    "hallucinated_citation": "Yiming Li, Xia Chen, Liang Zhou, and Zheng Wang. 2024b. Hindsight: Selective reflection for robust reasoning. arXiv preprint arXiv:2406.12050."
+  },
+  {
+    "event_id": 233,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.175",
+    "citation_key": "Zhu et al. (2025d)",
+    "hallucinated_citation": "Yujia Hong, Junyang Wu, Fan Zhang, and Shuo Zhang. 2024b. Adaptive agents with code and memory for solving math word problems. arXiv preprint arXiv:2403.01290."
+  },
+  {
+    "event_id": 234,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.176",
+    "citation_key": "Saad-Falcon et al. (2025)",
+    "hallucinated_citation": "Dahyun Koo, Yejin Choi, and Eunsol Choi. 2023. Cognitive Biases in Large Language Models as Evaluators. ArXiv Preprint arXiv:2312.05441."
+  },
+  {
+    "event_id": 235,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.212",
+    "citation_key": "Rafiuddin and Khan (2025)",
+    "hallucinated_citation": "Tim Dettmers, Yannic Kilcher, Henry Minsky, Anna McDowell, Neha Nangia, Andreas Vlachos, and the Microsoft Phi Team. 2025. Phi-4-mini: Compact yet powerful multimodal models. arXiv preprint arXiv:2503.01743."
+  },
+  {
+    "event_id": 236,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.281",
+    "citation_key": "Zhang et al. (2025c)",
+    "hallucinated_citation": "Yinlin Liu, Pengcheng Yin, and Graham Neubig. 2019. Conala: The code/natural language challenge. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP)."
+  },
+  {
+    "event_id": 237,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.331",
+    "citation_key": "Fan et al. (2025)",
+    "hallucinated_citation": "Yuyang Huang and Clark Glymour. 2016. A survey of causal discovery and causal inference. arXiv preprint."
+  },
+  {
+    "event_id": 238,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.354",
+    "citation_key": "LeVi et al. (2025)",
+    "hallucinated_citation": "Q. Zhang and 1 others. 2025. Gradient-free adversarial attacks on llms: Transferability and optimization. arXiv:2502.01567v1 [cs.CL]. This paper primarily focuses on gradient-free attacks on LLMs but includes gradient-based attacks, with transferability in black-box settings using surrogate models. It does not emphasize jailbreaking or Greedy Coordinate Gradient (GCG), making it less aligned with the text’s focus. Wang et al. (2025, arXiv:2503.02219v1 [cs.CL]) on gradient-based jailbreaking with GCG is a more precise alternative."
+  },
+  {
+    "event_id": 239,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.379",
+    "citation_key": "Li et al. (2025i)",
+    "hallucinated_citation": "Yinhan Tang, Xavier Garcia, Alessandro Raganato, Vishrav Chaudhary, and Jiatao Gu. 2022. An efficient multilingual byte-to-byte model for sequenceto-sequence tasks. In Findings of the Association for Computational Linguistics: EMNLP 2022."
+  },
+  {
+    "event_id": 240,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.391",
+    "citation_key": "Luo et al. (2025b)",
+    "hallucinated_citation": "Wenbin Xiong, Zhan Liu, Yihan Yang, Ge Yu, Ge Zhang, and Tian Song. 2023. A survey on hyperrelational knowledge graphs: From data models to applications. arXiv preprint arXiv:2301.03869."
+  },
+  {
+    "event_id": 241,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.435",
+    "citation_key": "Nguyen et al. (2025a)",
+    "hallucinated_citation": "Yi Cheng, Yilun Wu, Adrian Weller, Matt J. Kusner, and Pushmeet Kohli. 2024. Integrative decoding: Improving factuality in large language model generation via implicit self-consistency. In International Conference on Learning Representations."
+  },
+  {
+    "event_id": 242,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.437",
+    "citation_key": "Cai et al. (2025)",
+    "hallucinated_citation": "Wenhui Wang, Li Dong, Hao Cheng, Furu Wei, and Ming Zhou. 2022. Minilmv2: Multi-task pre-training for multi-task all-purpose text representations. In Findings of the Association for Computational Linguistics: ACL 2022, pages 2907–2918."
+  },
+  {
+    "event_id": 243,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.474",
+    "citation_key": "Ghosh et al. (2025)",
+    "hallucinated_citation": "Yankai Lin, Jiapeng Zhou, Yiming Shen, Wenxuan Zhou, Zhiyuan Liu, Peng Li, Maosong Sun, and Jie Zhou. 2021. Xcsqa: A benchmark for cross-lingual conversational question answering. In EMNLP."
+  },
+  {
+    "event_id": 244,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.517",
+    "citation_key": "Baali et al. (2025)",
+    "hallucinated_citation": "Jue Gao, Tri M Dang, Michael L Seltzer, and Rif A Saurous. 2022. Conversasynth: Exploring the landscape of synthetic conversations for audio understanding. In Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 6543–6558."
+  },
+  {
+    "event_id": 245,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.523",
+    "citation_key": "Mor-Lan et al. (2025)",
+    "hallucinated_citation": "David Hebron, Avi Shmidman, and Moshe Koppel. 2023. Hero: A hebrew roberta model for hebrew nlp tasks. Preprint, arXiv:2309.12345."
+  },
+  {
+    "event_id": 246,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.534",
+    "citation_key": "Liu and Roth (2025)",
+    "hallucinated_citation": "Ellie Pavlick and Joel Tetreault. 2016. Semantically motivated future directions in linguistic ambiguity detection. In Proceedings of the Annual Meeting of the Association for Computational Linguistics (ACL)."
+  },
+  {
+    "event_id": 247,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.645",
+    "citation_key": "Zhou et al. (2025d)",
+    "hallucinated_citation": "Sho Kurita, Jonas Pfeiffer, Ivan Vulic, Edoardo Ponti, ´ and Anna Korhonen. 2020. A weighted approach to unsupervised multilingual transformer fine-tuning. In Proc. of AACL-IJCNLP."
+  },
+  {
+    "event_id": 248,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.657",
+    "citation_key": "Bhattacharya et al. (2025)",
+    "hallucinated_citation": "Yifei Li, Zhou Zhao, Xiaohan Yu, and Deng Cai. 2023. Multimodal uncertainty estimation for deep learning models. arXiv preprint arXiv:2304.02637."
+  },
+  {
+    "event_id": 249,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.709",
+    "citation_key": "Zhang et al. (2025a)",
+    "hallucinated_citation": "E. Zaken, Y. Goldberg, and S. Ravfogel. 2022. Bitfit: Simple parameter-efficient fine-tuning for transformers. Transactions of the Association for Computational Linguistics (TACL), 10:1–16."
+  },
+  {
+    "event_id": 250,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.751",
+    "citation_key": "Xiang et al. (2025)",
+    "hallucinated_citation": "VN Ioannidis, X Song, S Manchanda, M Li, X Pan, D Zheng, X Ning, X Zeng, and G Karypis. 2022. Drkg-drug repurposing knowledge graph for covid19. 2020. arXiv preprint arXiv:2010.09600, pages 1–13."
+  },
+  {
+    "event_id": 251,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.834",
+    "citation_key": "Jalori et al. (2025)",
+    "hallucinated_citation": "Wendi Zhou, Xiao Li, Lin Geng Foo, Yitan Wang, Harold Soh, Caiming Xiong, and Yoonkey Kim. 2024. TEMPO: Temporal representation prompting for large language models in time-series forecasting. arXiv preprint arXiv:2405.18384. Anticipated for NeurIPS 2024. Preprint, arXiv:2405.18384."
+  },
+  {
+    "event_id": 252,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.863",
+    "citation_key": "Kellert et al. (2025)",
+    "hallucinated_citation": "Shruti Rijhwani, Lawrence Wolf-Sonkin, Victor Kuperman, Timothy Baldwin, and Thamar Solorio. 2017. Analyzing code-switched social media text. In Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing."
+  },
+  {
+    "event_id": 253,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.864",
+    "citation_key": "Jia et al. (2025b)",
+    "hallucinated_citation": "Jiawei Chen, Yuanhang He, Yada Zhang, Jiachen Ji, and Jie Tang. 2024. Generate-on-graph: Treat llm as both agent and knowledge graph for incomplete kgqa. arXiv preprint arXiv:2404.14741."
+  },
+  {
+    "event_id": 254,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.866",
+    "citation_key": "Li et al. (2025a)",
+    "hallucinated_citation": "Eric Mitchell, Roberta Raileanu, Colin Raffel, John Levine, Yulia Tsvetkov, and Christopher D Manning. 2023. Ieval: An instruction following benchmark. arXiv preprint arXiv:2310.07724."
+  },
+  {
+    "event_id": 255,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.874",
+    "citation_key": "Kim et al. (2025e)",
+    "hallucinated_citation": "Zhiwei Chen, Yichao Lu, and Mingjun Zheng. 2020. Dkt+: Enhanced deep knowledge tracing with regularization. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1234–1244."
+  },
+  {
+    "event_id": 256,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.902",
+    "citation_key": "Xu et al. (2025d)",
+    "hallucinated_citation": "Zixuan Wang, Xiaocheng Li, and Yang Liu. 2023. Posterior prompt tuning: Toward faithful and calibrated llms. In Empirical Methods in Natural Language Processing (EMNLP)."
+  },
+  {
+    "event_id": 257,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.914",
+    "citation_key": "Li et al. (2025h)",
+    "hallucinated_citation": "RangRang Ge, ShiYe Song, Zhaorui Liu, Wei Liu, Yuesheng Wang, Dongling Wang, Bofang Zhou, Zhicheng Dou, and Ji-Rong Wen. 2023. A survey on KV cache compression for large language models. arXiv preprint arXiv:2312.10546."
+  },
+  {
+    "event_id": 258,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.932",
+    "citation_key": "Jakob et al. (2025)",
+    "hallucinated_citation": "Shaina Ashraf, Isabel Bezzaoui, Ionut Andone, Alexander Markowetz, Jonas Fegert, and Lucie Flek. 2024. Defakts: A fine-grained dataset for analyzing disinformation in german media. In Proceedings of The 2024 Joint International Conference, on Computational Linguistics, Language Resources and Evaluation, Torino, Italia. European Language Resources Association."
+  },
+  {
+    "event_id": 259,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.943",
+    "citation_key": "Akhondzadeh et al. (2025)",
+    "hallucinated_citation": "Michael Boratko, Harsh Padigela, Deepak Mikkilineni, Pavan Yuvraj, Rajarshi Das, Andrew McCallum, Mihai Chang, Achille Fokoue, Pavan Kapanipathi, Nicholas Mattei, et al. 2018. Arc: A machine reading comprehension dataset for reasoning over science text. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing, pages 1414–1423."
+  },
+  {
+    "event_id": 260,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.954",
+    "citation_key": "Son et al. (2025)",
+    "hallucinated_citation": "Jack Hessel, Jingkang Zhao, Ranjay Krishna, Angel Chang, and Yonatan Bisk. 2022. Abductionrules: Leveraging commonsense knowledge and probabilistic reasoning for visual abduction. In Proceedings of the Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1451–1463."
+  },
+  {
+    "event_id": 261,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.960",
+    "citation_key": "Kim et al. (2025b)",
+    "hallucinated_citation": "Xudong Liu, Paul Röttger, Johannes Welbl, Yonatan Belinkov, Hila Gonen, Eric Wallace, Samuel R. Bowman, Ryan Cotterell, and Noah A. Smith. 2023a. Harmbench: Measuring the propensity of language models to produce harmful content. In Findings of the Association for Computational Linguistics: EMNLP 2023, pages 11033–11051."
+  },
+  {
+    "event_id": 262,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.967",
+    "citation_key": "Eyal et al. (2025)",
+    "hallucinated_citation": "Jackson Petty, Sjoerd van Steenkiste, Ishita Dasgupta, Fei Sha, Dan Garrette, and Tal Linzen. 2024. The impact of depth on compositional generalization in transformer-based neural networks. arXiv preprint arXiv:2310.19956."
+  },
+  {
+    "event_id": 263,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.97",
+    "citation_key": "Yin et al. (2025)",
+    "hallucinated_citation": "Alice Oh, Kalpesh Krishna, Eric Wallace, Yichong Zhao, Patrick Lewis, and Antoine Bosselut. 2023. Instructir: Making dense retrievers follow instructions. Preprint, arXiv:2305.14252."
+  },
+  {
+    "event_id": 264,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.findings-emnlp.973",
+    "citation_key": "Colakoglu et al. (2025)",
+    "hallucinated_citation": "Jian Zhong et al. 2020. Docextractor: An end-to-end system for information extraction from forms and receipts. arXiv preprint arXiv:2012.04573."
+  },
+  {
+    "event_id": 265,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.finnlp-2.3",
+    "citation_key": "George et al. (2025)",
+    "hallucinated_citation": "Peter Henderson, Koustuv Sinha, Nicolas AngelardGontier, Nan Rosemary Ke, Geneviève Fried, Ryan Lowe, and Joelle Pineau. 2023. Foundation models for legal reasoning. arXiv preprint arXiv:2307.03557."
+  },
+  {
+    "event_id": 266,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.finnlp-2.8",
+    "citation_key": "Nitarach et al. (2025)",
+    "hallucinated_citation": "Xuezhi Ma, Yan Zhou, Yining Wang, and 1 others. 2023. Financialqa: A reasoning benchmark for financial question answering. arXiv preprint arXiv:2302.07304."
+  },
+  {
+    "event_id": 267,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.hcinlp-1.8",
+    "citation_key": "Wang et al. (2025e)",
+    "hallucinated_citation": "OpenAI. 2023. Gpt-4: A large-scale multimodal model. arXiv preprint arXiv:2303.08774."
+  },
+  {
+    "event_id": 268,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.mathnlp-main.13",
+    "citation_key": "Lu et al. (2025)",
+    "hallucinated_citation": "Zhe Chen, Weiyun Zhang, Wen Wang, Yiliang Liu, Zhaoyang Zhang, Jian Wang, Jie Luo, Yu Qiao, and Wenhai Wang. 2024. Internvl 1.5: A general visionlanguage model. arXiv preprint arXiv:2404.16821."
+  },
+  {
+    "event_id": 269,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.mathnlp-main.5",
+    "citation_key": "Fatima (2025)",
+    "hallucinated_citation": "Jingwen Xin, Zhengying Liu, Yifan Luo, and 1 others. 2025. Deepseek-prover-v2: Scaling natural-language graph-based test time compute for automated theorem proving. arXiv preprint arXiv:2503.11657."
+  },
+  {
+    "event_id": 270,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.mathnlp-main.6",
+    "citation_key": "Khrulev (2025)",
+    "hallucinated_citation": "Zhen Yuan, Yifan Zhang, Jing Liu, Yuxiang Wang, Jie Zhang, Hanwang Liu, and Tat-Seng Chua. 2024. Fermat: A benchmark for evaluating vlm’s ability in factual error correction of handwritten math solutions. arXiv preprint arXiv:2405.10100."
+  },
+  {
+    "event_id": 271,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.mathnlp-main.9",
+    "citation_key": "Li (2025a)",
+    "hallucinated_citation": "Qwen Team. 2024. Qwen2.5-math: Scaling reasoning in mathematical domains. arXiv preprint arXiv:2409.XXXXX. Model card and technical report."
+  },
+  {
+    "event_id": 272,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.mrl-main.12",
+    "citation_key": "Moon et al. (2025)",
+    "hallucinated_citation": "Leonardo Ranaldi, Barry Haddow, and Alexandra Birch. 2025. CrossRAG: Cross-lingual retrieval-augmented generation for knowledge-intensive tasks. arXiv preprint arXiv:2504.03616."
+  },
+  {
+    "event_id": 273,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.mrl-main.2",
+    "citation_key": "Yuan et al. (2025c)",
+    "hallucinated_citation": "Laura A Banarescu, Claire Bonial, Sheila Condon, Emily Faries, Jon Niekrasz, and Tim O’ Connor. 2018. Amr for multi-document summarization. In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers), pages 577–583."
+  },
+  {
+    "event_id": 274,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.mrl-main.20",
+    "citation_key": "Rachamalla et al. (2025)",
+    "hallucinated_citation": "NVIDIA. 2025. Llama-nemotron-post-training dataset: A comprehensive collection of instruction tuning and alignment data. arXiv preprint arXiv:2505.00949."
+  },
+  {
+    "event_id": 275,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.nllp-1.11",
+    "citation_key": "Shukla et al. (2025)",
+    "hallucinated_citation": "Shounak Paul, Arpan Mandal, Pawan Goyal, and Saptarshi Ghosh. 2022b. Inlegalbert: Pre trained language models for indian legal texts. arXiv preprint arXiv:2209.06049."
+  },
+  {
+    "event_id": 276,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.nllp-1.32",
+    "citation_key": "Chheda et al. (2025)",
+    "hallucinated_citation": "Shivansh Nigam, Sarvesh Dubey, Ayush Agarwal, Dhananjay Kumar, and Saket Maheshwary. 2025. Legalseg: Unlocking the structure of indian legal documents. arXiv preprint arXiv:2502.05836."
+  },
+  {
+    "event_id": 277,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.nllp-1.5",
+    "citation_key": "Xia et al. (2025)",
+    "hallucinated_citation": "Ghita Houir Alami and 1 others. 2024. Legalbench-rag: A benchmark for retrieval-augmented systems in the legal domain. Preprint, arXiv:2408.10343."
+  },
+  {
+    "event_id": 278,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.nlperspectives-1.11",
+    "citation_key": "Zhang and Jaitly (2025)",
+    "hallucinated_citation": "Barbara Plank. 2022. Human label variation: Challenges and opportunities. Computational Linguistics, 48(4):999–1015."
+  },
+  {
+    "event_id": 279,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.starsem-1.24",
+    "citation_key": "Kadam and Ferraro (2025)",
+    "hallucinated_citation": "esse Dunietz, Sam Thomson, Chris Dyer, and Noah A. Smith. 2020. An interpretable, lexicalized model for implicit event causality. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, pages 1703–1713."
+  },
+  {
+    "event_id": 280,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.starsem-1.29",
+    "citation_key": "Gasan and Pais (2025)",
+    "hallucinated_citation": "Jinhyuk Kim, Wonjin Kim, Jinhyuk Lee, Joongbo Lee, Kyunghyun Lee, Sunghwan Yoon, and Jaewoo Kang. 2024. Meerkat: A medical reasoning benchmark for large language models. arXiv preprint arXiv:2402.00000."
+  },
+  {
+    "event_id": 281,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.starsem-1.3",
+    "citation_key": "Rai et al. (2025)",
+    "hallucinated_citation": "Harish Madabushi and 1 others. 2024. Frame-based embeddings for coherent question answering. In Proceedings of EACL."
+  },
+  {
+    "event_id": 282,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.starsem-1.33",
+    "citation_key": "Bailleux et al. (2025)",
+    "hallucinated_citation": "Sumedha Bhan, Aaditya Prabhu, Huaxiu Ma, and Zachary C. Lipton. 2025. Complete textual concept bottleneck models: Addressing concept completeness and classification leakage. arXiv preprint arXiv:2502.12345."
+  },
+  {
+    "event_id": 283,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.tsar-1.16",
+    "citation_key": "Hayakawa et al. (2025)",
+    "hallucinated_citation": "Ben Dodd, Betty van Aken, Paul Röttger, and Isabelle Augenstein. 2021. AUTORANK: A systematic approach to benchmark and compare machine learning models. In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing, pages 170–185, Online and Punta Cana, Dominican Republic. Association for Computational Linguistics"
+  },
+  {
+    "event_id": 284,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.tsar-1.7",
+    "citation_key": "Romero et al. (2025)",
+    "hallucinated_citation": "Mozilla NLP Team. 2023. Mozilla translations: Opensource neural translation in the browser. In Proceedings of Machine Translation Summit."
+  },
+  {
+    "event_id": 285,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.uncertainlp-main.24",
+    "citation_key": "Dossou and Aïdasso (2025)",
+    "hallucinated_citation": "Yi Zhang, Jialin Li, and Danqi Chen. 2023. Coannotating: Human-ai collaborative annotation via uncertainty-guided task allocation. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing."
+  },
+  {
+    "event_id": 286,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.winlp-main.12",
+    "citation_key": "Vinjamuri and Sun (2025)",
+    "hallucinated_citation": "Junxian Li, Xuezhe Ma, and Eduard Hovy. 2019. Dependency parsing with partial bi-affine attention. In Proceedings of NAACL-HLT."
+  },
+  {
+    "event_id": 287,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.winlp-main.19",
+    "citation_key": "Kolli et al. (2025)",
+    "hallucinated_citation": "Yujia Tan, Wenpeng Zhang, Xiang Ren, and Qiji Chen. 2023b. Oe-fact: Open-domain explanation-enhanced fact-checking with large language models. In Findings of the Association for Computational Linguistics: EMNLP 2023."
+  },
+  {
+    "event_id": 288,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.winlp-main.35",
+    "citation_key": "P and Mahalingam (2025)",
+    "hallucinated_citation": "Rahul Aralikatte, Neelamadhav Gantayat, Naveen Panwar, Anush Sankaran, and Senthil Mani. 2018. Sanskrit sandhi splitting using a double decoder rnn. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing, pages 4909–4914. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 289,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.wmt-1.105",
+    "citation_key": "Joshi et al. (2025b)",
+    "hallucinated_citation": "Ahmed, T., Hasan, M. K., Hoque, M. T., & Sultana, N. (2023). A comparative study on subword segmentation strategies for low-resource neural machine translation. In *Proceedings of the Eighth Conference on Machine Translation (WMT 2023)* (pp. 912–920). Association for Computational Linguistics. https://aclanthology.org/2023.wmt1.87"
+  },
+  {
+    "event_id": 290,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.wmt-1.106",
+    "citation_key": "Zhou et al. (2025c)",
+    "hallucinated_citation": "Anoop Kunchukuttan and 1 others. 2023. Indictrans2: Towards high-quality and low-resource machine translation for indic languages. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing."
+  },
+  {
+    "event_id": 291,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.wmt-1.108",
+    "citation_key": "Zhu et al. (2025c)",
+    "hallucinated_citation": "Martin Vechev Luca Beurer-Kellner, Marc Fischer. 2024. Guiding llms the right way: Fast, noninvasive constrained decoding. arXiv."
+  },
+  {
+    "event_id": 292,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.wmt-1.15",
+    "citation_key": "Bell et al. (2025)",
+    "hallucinated_citation": "Alfio Gliozzo and Carlo Strapparava. 2006. Exploiting lexical alignment for cross language textual entailment. In Proceedings of the 11th Conference of the European Chapter of the Association for Computational Linguistics, pages 33–40, Trento, Italy. Association for Computational Linguistics."
+  },
+  {
+    "event_id": 293,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.wmt-1.43",
+    "citation_key": "Pang et al. (2025)",
+    "hallucinated_citation": "Aaron Chiang and et al. 2023. Autoreviewer: Enabling model self-review for dataset quality control. arXiv preprint arXiv:2303.14112."
+  },
+  {
+    "event_id": 294,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.wmt-1.5",
+    "citation_key": "Kim (2025)",
+    "hallucinated_citation": "Zheng Jiang, Yang Yu, Yang Feng, Bing Qin, and Ting Liu. 2022. Blonde: An automatic evaluation metric for document-level natural language generation. In Proceedings of NAACL, pages 1679–1698."
+  },
+  {
+    "event_id": 295,
+    "venue": "emnlp-2025",
+    "paper_id": "2025.wmt-1.95",
+    "citation_key": "Acharya et al. (2025)",
+    "hallucinated_citation": "Gowtham Ramesh, Vishrav Chaudhary, Divyanshu Kakwani, Sai Praneeth Golla, Abhishek Philip, et al. 2023. Indictrans2: Towards high-quality and efficient multilingual translation for indic languages. arXiv preprint arXiv:2304.09105."
+  }
+]

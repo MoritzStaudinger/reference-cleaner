@@ -1,0 +1,5 @@
+# Institutional cert files — NEVER commit
+*.pem
+*.crt
+*.key
+!.gitignore

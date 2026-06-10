@@ -1,0 +1,34 @@
+# Keeps secrets and bulk artefacts out of the build context.
+# The build context is what Docker uploads to the daemon — anything
+# listed here is never seen by COPY commands.
+
+# Secrets
+.env
+*.pem
+*.key
+
+# Local caches and runtime data (huge — 2.7G of SQLite + uploads in dev)
+data/
+
+# Benchmark corpus (608 MB of PDFs, only needed for evaluation runs)
+benchmark/
+
+# Dev / VCS / editor
+.git/
+.gitignore
+.idea/
+.vscode/
+.claude/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Notebooks scratch
+*.ipynb_checkpoints/
+
+# Local docs that won't run in prod
+paper_178_audit.md

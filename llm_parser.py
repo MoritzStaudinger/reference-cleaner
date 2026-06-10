@@ -46,6 +46,32 @@ _MODEL = os.getenv("LLM_MODEL") or (
 _AQUEDUCT_BASE_URL = os.getenv(
     "AQUEDUCT_BASE_URL", "https://aqueduct.ai.datalab.tuwien.ac.at/v1"
 )
+# Per-batch timeout for the Aqueduct chat-completions call.  60 s is
+# tight on smaller/cold-start models — bumped to 120 s as the default
+# and exposed via env var for the benchmark harness.
+_AQUEDUCT_TIMEOUT = float(os.getenv("AQUEDUCT_TIMEOUT", "120"))
+
+
+def set_active_model(backend: str | None = None, model: str | None = None) -> tuple[str, str]:
+    """
+    Override the active LLM backend / model at runtime.  Lets the
+    benchmark harness compare models (e.g. qwen-3.6-35b vs gemma-4-e2b-it)
+    within a single process without re-importing.
+
+    Returns ``(active_backend, active_model)`` so callers can echo what
+    was actually selected — useful for logging.
+    """
+    global _BACKEND, _MODEL
+    if backend:
+        _BACKEND = backend.lower()
+    if model:
+        _MODEL = model
+    return _BACKEND, _MODEL
+
+
+def active_model() -> tuple[str, str]:
+    """Inspect the currently-active backend / model pair."""
+    return _BACKEND, _MODEL
 
 _SYSTEM_PROMPT = """\
 You are an expert bibliographer.  For each input you'll receive a raw citation
@@ -227,19 +253,24 @@ def _call_aqueduct(client, batch: list[dict[str, Any]]) -> list[_ParsedRef]:
     # each call ~10× faster (0.6 s vs 6 s in direct tests) — and the
     # task (structured citation parsing) doesn't need chain-of-thought.
     #
-    # `timeout=60` caps per-batch wall time so a hung Aqueduct request
-    # doesn't freeze a Streamlit session forever — falls back to the
-    # caller's batch-fail handler.
-    resp = client.chat.completions.create(
-        model=_MODEL,
-        max_tokens=4096,
-        messages=[
+    # ONLY pass that flag for models that actually understand it.  On
+    # gemma / llama / mistral, vLLM-served backends may hang trying to
+    # apply an unknown chat-template kwarg (every request times out at
+    # 60 s, every batch fails — exactly the failure mode we saw with
+    # gemma-4-e2b-it).  Whitelist the families we know it works on.
+    kwargs: dict[str, Any] = {
+        "model":       _MODEL,
+        "max_tokens":  4096,
+        "messages": [
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user",   "content": _build_user_payload(batch)},
         ],
-        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
-        timeout=60.0,
-    )
+        "timeout":     _AQUEDUCT_TIMEOUT,
+    }
+    if "qwen" in _MODEL.lower():
+        kwargs["extra_body"] = {"chat_template_kwargs": {"enable_thinking": False}}
+
+    resp = client.chat.completions.create(**kwargs)
     return _parse_response_text(resp.choices[0].message.content, len(batch))
 
 

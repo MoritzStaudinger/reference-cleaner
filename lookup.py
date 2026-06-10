@@ -57,6 +57,28 @@ _adapter = HTTPAdapter(pool_connections=20, pool_maxsize=20, max_retries=0)
 _SESSION.mount("https://", _adapter)
 _SESSION.mount("http://", _adapter)
 
+# Lightweight HTTP-call counter for cost/throughput analysis.  Increments
+# every time `_http_get_retry` or any `_SESSION.{get,post}` is invoked.
+# Categorised by host so the benchmark can show "X S2 calls, Y Crossref
+# calls, ..." per paper.  Disabled by default (no-op cost when off).
+HTTP_CALL_COUNTS: dict[str, int] = {}
+
+
+def _bump_http_count(url: str) -> None:
+    try:
+        host = url.split("//", 1)[1].split("/", 1)[0]
+    except Exception:
+        host = "unknown"
+    HTTP_CALL_COUNTS[host] = HTTP_CALL_COUNTS.get(host, 0) + 1
+
+
+def reset_http_counts() -> dict[str, int]:
+    """Snapshot + zero the HTTP call counter.  Returns the previous totals
+    so the caller can attribute calls to a unit of work (e.g. a paper)."""
+    prev = dict(HTTP_CALL_COUNTS)
+    HTTP_CALL_COUNTS.clear()
+    return prev
+
 # Transient HTTP statuses worth retrying — public APIs hit these under load.
 _RETRY_STATUSES = {429, 500, 502, 503, 504}
 
@@ -81,6 +103,7 @@ def _http_get_retry(
     that overloaded, giving up and reporting `error` is better than hanging.
     """
     last_exc: Exception | None = None
+    _bump_http_count(url)
     for i in range(attempts):
         try:
             r = _SESSION.get(url, params=params, headers=headers, timeout=timeout)
@@ -110,15 +133,21 @@ _S2_BASE   = "https://api.semanticscholar.org/graph/v1"
 _S2_FIELDS = "title,authors,year,externalIds,venue"
 
 _CR_BASE    = "https://api.crossref.org/works"
-_CR_HEADERS = {"User-Agent": "ReferenceCleaner/1.0 (mailto:contact@example.com)"}
+_CR_HEADERS = {"User-Agent": "ARES/1.0 (mailto:contact@example.com)"}
 
 _DBLP_BASE  = "https://dblp.org/search/publ/api"
 _OA_BASE    = "https://api.openalex.org/works"
+_CORE_BASE  = "https://api.core.ac.uk/v3"
+_CORE_API_KEY = os.getenv("CORE_API_KEY", "")
+# CORE's free tier: 10 req/min, 1000/day with an API key.  Caller-side
+# pacing is the responsibility of whoever calls _lookup_core — this is
+# intentionally NOT wired into the default lookup_all() escalation,
+# so it only fires when something explicitly calls it.
 # OpenAlex grants ~10× higher rate limits ("polite pool") to identifiable
 # users via the mailto query parameter.  Set OPENALEX_MAILTO in .env to
 # your real address; we fall back to a generic one only if not set.
 _OA_MAILTO  = os.getenv("OPENALEX_MAILTO", "moritz.staudinger@tuwien.ac.at")
-_OA_HEADERS = {"User-Agent": f"ReferenceCleaner/1.0 (mailto:{_OA_MAILTO})"}
+_OA_HEADERS = {"User-Agent": f"ARES/1.0 (mailto:{_OA_MAILTO})"}
 
 # Title similarity thresholds
 MATCH_THRESHOLD          = 0.90
@@ -140,6 +169,29 @@ _DOI_RE = re.compile(r"10\.\d{4,}/\S+")
 
 # ACL Anthology DOI prefix → used to derive aclanthology.org links without S2
 _ACL_DOI_RE = re.compile(r"10\.18653/v1/(.+)", re.IGNORECASE)
+
+
+def _normalize_acl_id(acl_id: str) -> str:
+    """
+    Canonicalise an ACL anthology paper id.
+
+    ACL has two id formats:
+      old style — ``P18-1234`` (leading letter is venue, always UPPERCASE
+                  on aclanthology.org).  Crossref/OpenAlex frequently
+                  store the DOI suffix lowercased (``p18-1234``), which
+                  is a 301 redirect on the website but breaks
+                  downstream pattern matching that expects the canonical
+                  uppercase form.
+      new style — ``2024.acl-long.123`` (lowercase, leading digit).  Must
+                  NOT be uppercased — the venue-tag and rank-tag are
+                  case-sensitive on aclanthology.org.
+
+    Distinguish by the first character: a leading letter means old
+    style → uppercase it.  A leading digit means new style → leave alone.
+    """
+    if acl_id and acl_id[0].isalpha():
+        return acl_id[0].upper() + acl_id[1:]
+    return acl_id
 
 # --- Source-routing patterns ---
 # DBLP indexes most CS conferences cleanly — when we see one of these venue
@@ -230,6 +282,17 @@ def title_similarity(t1: str, t2: str) -> float:
     shorter, longer = (n1, n2) if len(n1) <= len(n2) else (n2, n1)
     if longer.startswith(shorter) and len(shorter) / len(longer) >= 0.6:
         score = max(score, 1.0)
+
+    # Containment boost: when the shorter normalized title appears as a
+    # substring of the longer, treat it as a match.  Common when the
+    # parser left author names / year glued onto the title field
+    # ("Aaron Grattafiori and 1 others. 2024. The llama 3 herd of models"
+    # vs "The Llama 3 Herd of Models" — substring-contained at 100%, but
+    # token_sort_ratio sees the extra prefix words and scores ~50%).
+    # Guarded by a 15-char minimum on the shorter side so single-word
+    # titles can't false-match (e.g. "models").
+    if len(shorter) >= 15 and shorter in longer:
+        score = max(score, 1.0)
     return score
 
 
@@ -285,6 +348,45 @@ def _extract_lastnames(authors: str) -> set[str]:
         if candidate and candidate not in _AUTHOR_PLACEHOLDER_TOKENS:
             lastnames.add(candidate)
     return lastnames - {""}
+
+
+def _grounded_cited_authors(extracted_authors: str, raw: str) -> str:
+    """
+    Drop "cited" author names whose surname doesn't appear in the raw
+    citation text — these are typically LLM-repair hallucinations.
+
+    Real example: raw says only "C Raffel. Exploring the limits of
+    transfer learning..." but the LLM repair pass filled `authors` with
+    8 names — most of which are actually the authors of "Attention is
+    All You Need", not T5.  Comparing those 8 against the actual paper's
+    9 authors gives a 13% Jaccard score (only Raffel/Shazeer in common)
+    and the ref shows as red, even though the citation is just
+    underspecified, not wrong.
+
+    By dropping hallucinated names we let the coverage path
+    (intersection-over-smaller-set) handle truncated citations
+    correctly: 1 grounded surname matching 1 of 9 found authors → 100%.
+    """
+    if not extracted_authors or not raw:
+        return extracted_authors
+    raw_l = raw.lower()
+    pieces = re.split(r"[,;]|\band\b", extracted_authors, flags=re.IGNORECASE)
+    kept: list[str] = []
+    for p in pieces:
+        p = p.strip()
+        if not p:
+            continue
+        words = re.findall(r"[A-Za-zÀ-ÿ'\-]{2,}", p)
+        if not words:
+            continue
+        surname = words[-1].lower()
+        if surname in raw_l:
+            kept.append(p)
+    if not kept:
+        # Nothing grounded — return original so we don't silently drop
+        # the entire author list (e.g. raw is corrupted / non-Latin).
+        return extracted_authors
+    return ", ".join(kept)
 
 
 def author_similarity(a1: str, a2: str) -> float:
@@ -431,13 +533,28 @@ def refresh_result_against_ref(
     if tsim is None:
         return result
 
+    extracted_title   = (ref or {}).get("title", "") or ""
     extracted_authors = (ref or {}).get("authors", "") or ""
     extracted_venue   = (ref or {}).get("venue", "") or ""
+    found_title       = result.get("found_title", "") or ""
     found_authors     = result.get("found_authors", "") or ""
     found_venue       = result.get("found_venue", "") or ""
 
-    asim = (author_similarity(extracted_authors, found_authors)
-            if (extracted_authors and found_authors) else None)
+    # Re-score title with the CURRENT title_similarity (it may have
+    # gained the containment boost or other improvements since the
+    # cached score was computed).  Otherwise a parser-poisoned title
+    # like "Authors. Year. The actual title" would stay yellow forever.
+    if extracted_title and found_title:
+        tsim = title_similarity(extracted_title, found_title)
+
+    # Ground the cited authors against the raw text — drops LLM-repair
+    # hallucinations that aren't actually in the citation, so the
+    # coverage path can correctly score a 1-grounded-name citation as
+    # a match against a multi-author paper.
+    grounded_authors = _grounded_cited_authors(
+        extracted_authors, (ref or {}).get("raw", "") or "")
+    asim = (author_similarity(grounded_authors, found_authors)
+            if (grounded_authors and found_authors) else None)
 
     if _is_preprint_venue(extracted_venue):
         vsim = None
@@ -473,6 +590,7 @@ def refresh_result_against_ref(
 
     out = {
         **result,
+        "similarity":  tsim,        # may be recomputed above
         "authors_sim": asim,
         "venue_sim":   vsim,
         "label":       new_label,
@@ -543,23 +661,108 @@ def _composite_label(
 # Identifier extraction helpers
 # ---------------------------------------------------------------------------
 
+# Recognise the markers used to start a numbered citation entry, in
+# either ACM-style ([1]) or Springer-style (39.) bibliographies.
+#
+# Guards against false matches on inline numbers ("Section 3.",
+# "in 1990.", "1.5 is the value"):
+#   - look-behind: must be at string start OR preceded by whitespace
+#   - the digit run is bounded to 1-3 digits (no 4-digit years like "1990.")
+#   - look-ahead: must be followed by whitespace + uppercase letter
+#     (real citations start with an author surname, not a lowercase word)
+_ACM_MARKER_FIND_RE = re.compile(
+    r"(?:(?<=\s)|^)"               # start-of-string OR after whitespace
+    r"(?:\[\d{1,3}\]|\d{1,3}\.)"   # [N] or N. (N up to 3 digits)
+    r"(?=\s+[A-ZÀ-Ý])"             # followed by whitespace + uppercase
+)
+
+
+def _ref_raw_segment(ref: dict[str, Any]) -> str:
+    """
+    Return the slice of ``ref["raw"]`` that actually belongs to *this*
+    reference, even when the parser left adjacent refs glued on.
+
+    ACM-style bibliographies pack citations as ``... doi:X [N] authors
+    ... title ... doi:Y [N+1] ...`` with no blank-line break.  When the
+    parser doesn't split on the ``[N]`` markers cleanly, ref [N]'s raw
+    can include the tail of ref [N-1] (carrying ITS DOI) plus the head
+    of ref [N+1].  Routing by the first DOI found would then pick the
+    PREVIOUS ref's DOI and send us to the wrong paper — exactly the
+    "DOI lookup doesn't work" symptom.
+
+    Strategy: split raw on ``[\\d+]`` markers, pick the segment whose
+    text best overlaps with ``ref["title"]`` (by word-set intersection).
+    Falls back to the full raw when there's nothing to split on.
+    """
+    raw = (ref.get("raw", "") or "").strip()
+    if not raw:
+        return ""
+
+    marker_spans = list(_ACM_MARKER_FIND_RE.finditer(raw))
+    if len(marker_spans) < 1:
+        return raw   # no [N] markers — nothing to split
+
+    # Build candidate segments.  The text BEFORE the first marker is the
+    # tail of the previous ref; we never want that.  Segments are then
+    # [marker_k.start : marker_{k+1}.start) for k in 0..len-1, plus a
+    # final segment from the last marker to end.
+    boundaries = [m.start() for m in marker_spans] + [len(raw)]
+    segments   = [raw[boundaries[k]:boundaries[k + 1]].strip()
+                  for k in range(len(boundaries) - 1)]
+    if not segments:
+        return raw
+
+    # Score each segment by title-word overlap.  Cheap, dependency-free.
+    title  = (ref.get("title") or "").lower()
+    if not title:
+        # No title to disambiguate with — prefer the LAST segment (ACM
+        # places the DOI at the end of each citation, so the last one
+        # is most likely the current ref's own segment).
+        return segments[-1]
+
+    title_words = {w for w in re.findall(r"[a-z0-9]{3,}", title)}
+    if not title_words:
+        return segments[-1]
+
+    best_seg, best_score = segments[0], -1
+    for seg in segments:
+        seg_words = set(re.findall(r"[a-z0-9]{3,}", seg.lower()))
+        score = len(title_words & seg_words)
+        if score > best_score:
+            best_score = score
+            best_seg   = seg
+    return best_seg
+
+
 def _extract_doi(ref: dict[str, Any]) -> str | None:
-    """Return DOI from the doi field or from a doi.org URL in url/raw fields."""
+    """Return DOI from the doi field or from a doi.org URL in url/raw."""
     doi = ref.get("doi", "") or ""
     if doi:
         return doi.rstrip(".,)")
-    for field in ("url", "raw"):
-        val = ref.get(field, "") or ""
-        m = _DOI_FROM_URL_RE.search(val)
-        if m:
-            return m.group(1).rstrip(".,)")
+    # url first (LLM-enriched, clean), then the ref-segment of raw —
+    # NOT the full raw, which can include the previous ref's DOI.
+    url = ref.get("url", "") or ""
+    m   = _DOI_FROM_URL_RE.search(url)
+    if m:
+        return m.group(1).rstrip(".,)")
+    m = _DOI_FROM_URL_RE.search(_ref_raw_segment(ref))
+    if m:
+        return m.group(1).rstrip(".,)")
     return None
 
 
 def _extract_arxiv_id(ref: dict[str, Any]) -> str | None:
-    for field in ("url", "raw", "doi"):
-        val = ref.get(field, "") or ""
-        m   = _ARXIV_ID_RE.search(val)
+    # Check url first (LLM-enriched), then this ref's segment of raw,
+    # then venue (Springer / ACM sometimes embed "arXiv:NNNN.NNNNN" in
+    # the venue field), then doi.  Scanning the full raw risks picking
+    # up adjacent refs' arxiv IDs in merged blocks.
+    for field, val in (
+        ("url",   ref.get("url", "") or ""),
+        ("raw",   _ref_raw_segment(ref)),
+        ("venue", ref.get("venue", "") or ""),
+        ("doi",   ref.get("doi", "") or ""),
+    ):
+        m = _ARXIV_ID_RE.search(val)
         if m:
             return m.group(1) or m.group(2)
     return None
@@ -579,15 +782,16 @@ def _cited_arxiv_id(ref: dict[str, Any]) -> str | None:
     arxiv if any field has an ID), but `_cited_arxiv_id` for "wrong
     arXiv ID" claims (only blame the user for an ID they actually cited).
     """
-    for field in ("raw", "venue"):
-        val = ref.get(field, "") or ""
-        m   = _ARXIV_ID_RE.search(val)
+    # Scope `raw` to this ref's segment so we don't pick up an arxiv ID
+    # from the previous/next citation in an ACM-style merged block.
+    for val in (_ref_raw_segment(ref), ref.get("venue", "") or ""):
+        m = _ARXIV_ID_RE.search(val)
         if m:
             return m.group(1) or m.group(2)
     return None
 
 
-_URL_FOLLOW_HEADERS = {"User-Agent": "ReferenceCleaner/1.0 (mailto:contact@example.com)"}
+_URL_FOLLOW_HEADERS = {"User-Agent": "ARES/1.0 (mailto:contact@example.com)"}
 
 
 def _resolve_url_doi(url: str) -> str | None:
@@ -677,7 +881,7 @@ def _s2_paper_to_result(
         "url":           f"https://www.semanticscholar.org/paper/{data['paperId']}",
     }
     if ext.get("ACL"):
-        acl_id = ext["ACL"]
+        acl_id = _normalize_acl_id(ext["ACL"])
         result["acl_url"] = f"https://aclanthology.org/{acl_id}"
         result["acl_id"]  = acl_id
     if ext.get("ArXiv"):
@@ -773,6 +977,7 @@ def _s2_batch_get(ids: list[str], api_key: str | None) -> list[dict | None]:
         return []
     url = f"{_S2_BASE}/paper/batch"
     headers = {**_s2_headers(api_key), "Content-Type": "application/json"}
+    _bump_http_count(url)
     for attempt in range(3):
         r = _SESSION.post(
             url,
@@ -1238,7 +1443,6 @@ def _lookup_arxiv(ref: dict[str, Any]) -> dict[str, Any]:
 # Crossref  (full validation when DOI present; title-search fallback)
 # ---------------------------------------------------------------------------
 
-@_cached("crossref", postprocess=_refresh_label)
 def _first_str(value: Any) -> str:
     """Return the first non-empty string found in `value`, unwrapping
     nested lists if Crossref hands us something like ``[["Title"]]``."""
@@ -1369,6 +1573,7 @@ def _crossref_batch_prewarm(refs: list[dict[str, Any]]) -> int:
     return len(pending)
 
 
+@_cached("crossref", postprocess=_refresh_label)
 def _lookup_crossref(ref: dict[str, Any]) -> dict[str, Any]:
     extracted_title   = ref.get("title", "")
     extracted_venue   = ref.get("venue", "")
@@ -1418,7 +1623,7 @@ def _lookup_crossref(ref: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 _OL_BASE    = "https://openlibrary.org/search.json"
-_OL_HEADERS = {"User-Agent": "ReferenceCleaner/1.0 (mailto:contact@example.com)"}
+_OL_HEADERS = {"User-Agent": "ARES/1.0 (mailto:contact@example.com)"}
 
 
 @_cached("openlibrary", postprocess=_refresh_label)
@@ -1616,13 +1821,209 @@ def _lookup_scholarly(ref: dict[str, Any]) -> dict[str, Any]:
 # Source routing
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# doi.org  (content negotiation against the canonical DOI handle system)
+# ---------------------------------------------------------------------------
+#
+# doi.org redirects DOI resolution to the registering registry (Crossref,
+# DataCite, MEDRA, JaLC, ...) and returns the metadata in CSL-JSON when
+# asked via `Accept: application/vnd.citationstyles.csl+json`.  No API
+# key needed — they just want a User-Agent identifying the requester
+# (a `mailto:` is the conventional courtesy).
+#
+# Advantages over hitting Crossref/S2/OpenAlex directly:
+#   - One canonical source per DOI (whichever registry minted it).
+#   - Covers DataCite (datasets, software), MEDRA, JaLC — DOIs that
+#     Crossref alone doesn't index.
+#   - CSL-JSON shape is identical to Crossref's `message`, so we reuse
+#     `_crossref_msg_to_result` for the mapping.
+#
+# Cached in SQLite via `@_cached("doi_org")`.
+
+_DOI_ORG_MAILTO  = os.getenv(
+    "DOI_ORG_MAILTO",
+    os.getenv("OPENALEX_MAILTO", "moritz.staudinger@tuwien.ac.at"),
+)
+_DOI_ORG_HEADERS = {
+    "User-Agent": f"ARES/1.0 (mailto:{_DOI_ORG_MAILTO})",
+    "Accept":     "application/vnd.citationstyles.csl+json",
+}
+
+
+@_cached("doi_org", postprocess=_refresh_label)
+def _lookup_doi_org(ref: dict[str, Any]) -> dict[str, Any]:
+    """
+    Primary DOI resolver: content-negotiates against doi.org and parses
+    the returned CSL-JSON.  Falls back through the rest of the DOI vote
+    (Crossref / S2 / OpenAlex) only when this fails — covered by the
+    escalation phase in `lookup_reference`.
+    """
+    doi = _extract_doi(ref)
+    if not doi:
+        return {"status": "skipped"}
+
+    extracted_title   = ref.get("title", "")
+    extracted_venue   = ref.get("venue", "")
+    extracted_authors = ref.get("authors", "")
+
+    try:
+        r = _http_get_retry(
+            f"https://doi.org/{doi}",
+            headers=_DOI_ORG_HEADERS,
+            timeout=10,
+        )
+    except Exception as exc:
+        return {"status": "error", "error": str(exc)[:120]}
+
+    # 404 / 410 → DOI doesn't resolve.  Anything else non-2xx is a
+    # transient transport error; let the cache stay clean and let the
+    # escalation phase try other registries.
+    if r.status_code in (404, 410):
+        return {"status": "not_found"}
+    if not r.ok:
+        return {"status": "error", "error": f"HTTP {r.status_code}"}
+
+    try:
+        data = r.json()
+    except Exception:
+        return {"status": "error", "error": "non-JSON response"}
+    if not isinstance(data, dict):
+        return {"status": "error", "error": "unexpected response shape"}
+
+    # CSL-JSON returned by doi.org matches Crossref's `message` shape
+    # closely enough to reuse the mapper.  Wrong-DOI detection: if the
+    # resolved title is clearly different from the cited title, flag it
+    # so downstream sees a confident "wrong paper" — same precision tell
+    # as the S2 / arxiv routes.
+    result = _crossref_msg_to_result(
+        data, doi, extracted_title, extracted_venue, extracted_authors)
+    if (extracted_title and result.get("found_title")
+            and result.get("similarity", 1.0) < 0.50):
+        result["wrong_doi"] = doi
+        result["label"]     = "mismatch"
+    return result
+
+
+# ---------------------------------------------------------------------------
+# CORE  (https://core.ac.uk) — open-access aggregator covering preprints,
+# institutional repositories, theses, and grey literature that S2 / Crossref
+# / OpenAlex skip.  Intentionally NOT in the default router or escalation
+# — wired only as a callable for opt-in "rescue" studies on refs the
+# main pipeline marked `missing`.  Activate by importing _lookup_core
+# explicitly; pace at the caller (free tier is 10 req/min).
+#
+# Requires CORE_API_KEY in env.  Register at https://core.ac.uk/services/api
+# for a free key.
+
+@_cached("core", postprocess=_refresh_label)
+def _lookup_core(ref: dict[str, Any]) -> dict[str, Any]:
+    """
+    Title-search CORE for refs the main pipeline flagged as `missing`.
+    Returns the standard result schema so it can be merged into a ref's
+    `lookup_results` dict and re-classified by `_overall_status`.
+
+    Status semantics same as other sources:
+      - `skipped`   : no title to search with, or no CORE_API_KEY in env
+      - `not_found` : title search returned nothing usable
+      - `found`     : best match populated (label may be match/fuzzy/mismatch)
+      - `error`     : transport/parse problem
+    """
+    extracted_title   = ref.get("title", "")
+    extracted_venue   = ref.get("venue", "")
+    extracted_authors = ref.get("authors", "")
+    if not extracted_title or not _CORE_API_KEY:
+        return {"status": "skipped"}
+
+    headers = {"Authorization": f"Bearer {_CORE_API_KEY}"}
+    try:
+        # CORE's /search/works endpoint accepts a `q` query and Lucene-
+        # style filters.  Limit to 5 results — we re-rank by our own
+        # title_similarity rather than trusting CORE's relevance score.
+        r = _http_get_retry(
+            f"{_CORE_BASE}/search/works",
+            params={"q": extracted_title, "limit": 5},
+            headers=headers,
+            timeout=15,
+        )
+        if r.status_code in (401, 403):
+            return {"status": "error", "error": f"CORE auth failed ({r.status_code})"}
+        r.raise_for_status()
+        hits = r.json().get("results", []) or []
+        if not hits:
+            return {"status": "not_found"}
+
+        # Re-rank by our own title_similarity.  CORE's relevance ranking
+        # can put unrelated papers at the top when the title has common
+        # words ("transformer", "survey").
+        ranked = sorted(
+            hits,
+            key=lambda h: title_similarity(extracted_title, h.get("title", "") or ""),
+            reverse=True,
+        )
+        best = ranked[0]
+        found_title = (best.get("title") or "").strip()
+        if not found_title:
+            return {"status": "not_found"}
+
+        # Authors come as a list of {"name": "..."} dicts.
+        authors_list = best.get("authors") or []
+        found_authors = ", ".join(
+            (a.get("name") or "").strip()
+            for a in authors_list if isinstance(a, dict)
+        ).strip(", ")
+
+        # Venue / journal — CORE returns several possibilities.
+        found_venue = (
+            (best.get("publisher") or "")
+            or (best.get("journals") or [{}])[0].get("title", "")
+            or ""
+        )
+
+        # Identifiers
+        doi      = (best.get("doi") or "").strip()
+        oa_url   = best.get("downloadUrl") or best.get("sourceFulltextUrls") or ""
+        if isinstance(oa_url, list):
+            oa_url = oa_url[0] if oa_url else ""
+        url = oa_url or (f"https://doi.org/{doi}" if doi else "") \
+              or f"https://core.ac.uk/works/{best.get('id', '')}"
+
+        tsim = title_similarity(extracted_title, found_title)
+        asim = (author_similarity(extracted_authors, found_authors)
+                if (extracted_authors and found_authors) else None)
+        vsim = (venue_similarity(extracted_venue, found_venue)
+                if (extracted_venue and found_venue) else None)
+
+        return {
+            "status":        "found",
+            "found_title":   found_title,
+            "found_authors": found_authors,
+            "found_venue":   found_venue,
+            "similarity":    tsim,
+            "authors_sim":   asim,
+            "label":         _composite_label(tsim, asim, found_venue, vsim),
+            "venue_sim":     vsim,
+            "venue_label":   _venue_label(vsim, found_venue),
+            "year":          (best.get("yearPublished") or
+                              (best.get("publishedDate") or "")[:4] or ""),
+            "doi":           doi,
+            "url":           url,
+        }
+
+    except Exception as exc:
+        return {"status": "error", "error": str(exc)[:120]}
+
+
 _LOOKUP_FNS = {
+    "doi_org":          _lookup_doi_org,
     "semantic_scholar": _lookup_semantic_scholar,
     "dblp":             _lookup_dblp,
     "openalex":         _lookup_openalex,
     "arxiv":            _lookup_arxiv,
     "crossref":         _lookup_crossref,
 }
+# Note: `core` is intentionally absent from _LOOKUP_FNS so the default
+# router / escalation never picks it up.  It IS reachable via direct
+# import (`from lookup import _lookup_core`) for opt-in rescue studies.
 _ALL_API_SOURCES = list(_LOOKUP_FNS.keys())
 
 
@@ -1636,12 +2037,19 @@ def _classify_ref(ref: dict[str, Any]) -> list[str]:
     if it misses.
     """
     if _extract_arxiv_id(ref):
-        # arXiv + S2 (S2 indexes preprints via externalIds.ArXiv)
-        return ["arxiv", "semantic_scholar"]
+        # arXiv only.  arXiv is authoritative for arxiv-IDs (the ID
+        # routes directly to the paper), and querying other indices
+        # adds latency without precision: if S2/OpenAlex disagree, it's
+        # because they don't have the preprint indexed yet, not because
+        # arXiv is wrong.  Skipping them collapses arxiv refs to a
+        # single fast lookup.
+        return ["arxiv"]
     if _extract_doi(ref):
-        # Three independent DOI registries — vote prevents a single
-        # source's miss from flagging a real paper as fabricated.
-        return ["crossref", "semantic_scholar", "openalex"]
+        # doi.org first — content negotiation hits the canonical
+        # registry for the DOI (Crossref / DataCite / MEDRA / JaLC).
+        # The other registries are kept as fallback votes so a single
+        # 503 or "not yet indexed" doesn't sink a real paper.
+        return ["doi_org", "crossref", "semantic_scholar", "openalex"]
 
     text = " ".join([
         ref.get("raw", "") or "",
@@ -1776,6 +2184,18 @@ def _all_not_found(results: dict[str, Any], sources: list[str]) -> bool:
     )
 
 
+def _has_mismatch(results: dict[str, Any], sources: list[str]) -> bool:
+    """True if any chosen source returned a confident wrong-paper mismatch
+    (cited identifier resolved to something with a clearly different title).
+    This is an authoritative answer for id-refs — no point in escalating
+    to title-only search when the cited DOI/arXiv-ID itself is wrong."""
+    return any(
+        results.get(s, {}).get("status") == "found"
+        and results.get(s, {}).get("label") == "mismatch"
+        for s in sources
+    )
+
+
 def lookup_reference(ref: dict[str, Any]) -> dict[str, Any]:
     """
     Look up a single reference through a tiered pipeline:
@@ -1812,13 +2232,15 @@ def lookup_reference(ref: dict[str, Any]) -> dict[str, Any]:
     if chosen:
         is_id_ref = bool(_extract_arxiv_id(ref) or _extract_doi(ref))
 
-        # Fast path: for ID refs, peek at the batch-prewarmed caches first
-        # (S2, then OpenAlex).  Both are ~ms lookups when cached.  If either
-        # confirms a match by ID, the remaining sources can only corroborate
-        # — skip their per-ref API calls.
+        # Fast path: for ID refs, query the most authoritative sources
+        # one at a time and stop early on a confident match.  Order:
+        #   1. doi_org   — canonical for DOI refs
+        #   2. semantic_scholar / openalex — batch-prewarmed, ms lookups
+        # The remaining sources only corroborate; skip their per-ref
+        # API calls once we have a match.
         chosen_to_run: list[str] = list(chosen)
         if is_id_ref:
-            for fast_src in ("semantic_scholar", "openalex"):
+            for fast_src in ("doi_org", "semantic_scholar", "openalex"):
                 if fast_src in chosen_to_run:
                     results[fast_src] = _LOOKUP_FNS[fast_src](ref)
                     chosen_to_run = [s for s in chosen_to_run if s != fast_src]
@@ -1830,7 +2252,13 @@ def lookup_reference(ref: dict[str, Any]) -> dict[str, Any]:
             results.update(_run_sources(ref, chosen_to_run))
         # Verified: any chosen source returned a title match.
         # Fabricated (id_ref): every chosen source confirmed not_found.
-        if _has_match(results, chosen) or (is_id_ref and _all_not_found(results, chosen)):
+        # Wrong-id (id_ref): the cited identifier resolved to a clearly
+        # different paper — authoritative, no need to escalate.
+        if (
+            _has_match(results, chosen)
+            or (is_id_ref and _all_not_found(results, chosen))
+            or (is_id_ref and _has_mismatch(results, chosen))
+        ):
             results["_router_path"] = f"routed:{','.join(chosen)}"
             for src in _ALL_API_SOURCES:
                 results.setdefault(src, {"status": "skipped"})
@@ -1900,6 +2328,7 @@ def _backfill_acl_from_doi(results: dict[str, Any]) -> None:
         m = _ACL_DOI_RE.match(d)
         if m:
             r = results[src]
+            acl_id = _normalize_acl_id(m.group(1))
             results["acl_anthology"] = {
                 "status":      "found",
                 "found_title": r.get("found_title", ""),
@@ -1908,10 +2337,34 @@ def _backfill_acl_from_doi(results: dict[str, Any]) -> None:
                 "label":       r.get("label", "match"),
                 "venue_sim":   r.get("venue_sim"),
                 "venue_label": r.get("venue_label", "unknown"),
-                "url":         f"https://aclanthology.org/{m.group(1)}",
-                "acl_id":      m.group(1),
+                "url":         f"https://aclanthology.org/{acl_id}",
+                "acl_id":      acl_id,
             }
             return
+
+
+def count_cached_refs(references: list[dict[str, Any]]) -> tuple[int, int]:
+    """
+    Return ``(cached, total)`` — how many of the given refs already have
+    a result in the SQLite cache for the **primary validation source**
+    (Semantic Scholar).
+
+    Used by the UI to show honest expectations before kicking off a
+    lookup pass: if you've processed the paper before, every ref's S2
+    entry is cached and the run completes in seconds; if it's a fresh
+    paper, none are cached and you'll pay full API latency.
+
+    Uses S2 as the proxy because S2 is queried for every ref regardless
+    of router path, so its hit-rate is a tight upper bound on the
+    overall lookup cost.
+    """
+    cache = _get_cache()
+    n_cached = 0
+    for ref in references:
+        key = _cache_key(ref)
+        if key and cache.get("semantic_scholar", key) is not None:
+            n_cached += 1
+    return n_cached, len(references)
 
 
 def lookup_all(

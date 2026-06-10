@@ -21,8 +21,11 @@ Color = tuple[float, float, float]
 COLORS: dict[str, Color] = {
     "match":    (0.18, 0.78, 0.35),   # green
     "mismatch": (0.93, 0.27, 0.27),   # red
-    "missing":  (1.00, 0.85, 0.20),   # clearer yellow (was orange-amber)
-    "pending":  (0.98, 0.96, 0.55),   # pale yellow (before lookup)
+    "missing":  (1.00, 0.85, 0.20),   # clearer yellow
+    "pending":  (1.00, 0.85, 0.20),   # same yellow as missing — pending and
+                                      # missing are visually indistinguishable
+                                      # in the UI, so the baked PDF colour
+                                      # matches.  Status changes after lookup.
 }
 
 
@@ -134,16 +137,76 @@ def highlight_references(
     # against all of them once.
     from rapidfuzz import fuzz as _fuzz
 
+    # ACM- and Springer-style bibliographies pack refs tightly enough
+    # that PyMuPDF's block detector often merges several citations
+    # into a single block.  When that happens, highlighting the whole
+    # block paints a giant rectangle that covers refs [3]-[7] for the
+    # cost of one match — the user can't visually tell them apart.
+    #
+    # Detect merged blocks by scanning their lines for citation markers
+    # via `get_text("dict")` (which carries per-line bboxes).  When a
+    # block contains ≥2 marker lines, split it into sub-blocks at each
+    # marker boundary, using the spanning line bboxes to derive a tight
+    # rect for each individual ref.
+    #
+    # Marker forms recognised:
+    #   "[1] Author..."   ACM / NeurIPS / IEEE
+    #   "(1) Author..."   uncommon but used
+    #   "1. Author..."    Springer LNCS / many books
+    #   "1) Author..."    occasional
+    # The trailing capital letter requirement (`[A-Z]`) excludes things
+    # like inline "Section 3. discusses" from accidentally splitting a
+    # body-text block — refs invariably start with an author's surname.
+    _REF_MARKER_RE = re.compile(
+        r"^\s*(?:\[\d+\]|\(\d+\)|\d+[.)])\s+[A-Z]"
+    )
+
     blocks: list[tuple[int, fitz.Rect, str, str]] = []   # (page_idx, rect, raw_text, norm_text)
     for page in doc:
-        for b in page.get_text("blocks"):
-            # b = (x0, y0, x1, y1, text, block_no, block_type)
-            if len(b) < 5:
+        text_dict = page.get_text("dict")
+        for b in text_dict.get("blocks", []):
+            if b.get("type") != 0:   # 0 = text, 1 = image
                 continue
-            text = (b[4] or "").strip()
+            lines = b.get("lines") or []
+            if not lines:
+                continue
+
+            # Find lines that start a new numbered reference
+            marker_idxs: list[int] = []
+            line_texts: list[str] = []
+            for li, line in enumerate(lines):
+                spans   = line.get("spans") or []
+                line_t  = "".join(s.get("text", "") for s in spans)
+                line_texts.append(line_t)
+                if _REF_MARKER_RE.match(line_t):
+                    marker_idxs.append(li)
+
+            if len(marker_idxs) >= 2:
+                # Merged block — split into per-ref sub-blocks.  Each
+                # sub-block spans lines [marker_idxs[k], marker_idxs[k+1]).
+                marker_idxs.append(len(lines))   # sentinel for last segment
+                for k in range(len(marker_idxs) - 1):
+                    start, end = marker_idxs[k], marker_idxs[k + 1]
+                    sub_lines = lines[start:end]
+                    sub_text  = "\n".join(line_texts[start:end]).strip()
+                    if len(sub_text) < 30:
+                        continue
+                    # Union of all line bboxes in this segment
+                    x0 = min(li["bbox"][0] for li in sub_lines)
+                    y0 = min(li["bbox"][1] for li in sub_lines)
+                    x1 = max(li["bbox"][2] for li in sub_lines)
+                    y1 = max(li["bbox"][3] for li in sub_lines)
+                    rect = fitz.Rect(x0, y0, x1, y1)
+                    norm = _clean_for_search(sub_text).lower()
+                    blocks.append((page.number, rect, sub_text, norm))
+                continue
+
+            # Default path: one block = one ref (ACL / NeurIPS / etc.)
+            bbox = b.get("bbox", (0, 0, 0, 0))
+            text = "\n".join(line_texts).strip()
             if len(text) < 30:
                 continue
-            rect = fitz.Rect(b[0], b[1], b[2], b[3])
+            rect = fitz.Rect(*bbox)
             norm = _clean_for_search(text).lower()
             blocks.append((page.number, rect, text, norm))
 
@@ -181,15 +244,16 @@ def highlight_references(
         if best_idx >= 0 and best_score >= 80:
             pn, rect, _, _ = blocks[best_idx]
             page = doc[pn]
-            # add_rect_annot with semi-transparent fill renders as a clean
-            # straight rectangle in every PDF viewer.  PyMuPDF's
-            # add_highlight_annot uses Quad-based highlights that some
-            # viewers render with curved / marker-pen edges.
-            annot = page.add_rect_annot(rect)
-            annot.set_colors(stroke=color, fill=color)
-            annot.set_border(width=0)
-            annot.set_opacity(0.30)
-            annot.update()
+            # Draw the highlight as page CONTENT, not as a PDF annotation.
+            # add_rect_annot would create an interactive widget that PDF.js
+            # renders in its AnnotationLayer with pointer-events:auto —
+            # which intercepts clicks on any PDF link annotation underneath
+            # (DOIs, URLs, etc.) and makes them unclickable.  draw_rect
+            # bakes the rectangle into the page's content stream, so it's
+            # visually identical but completely non-interactive — links
+            # underneath stay clickable.
+            page.draw_rect(rect, color=None, fill=color, fill_opacity=0.30,
+                           width=0, overlay=True)
             used_block_idx.add(best_idx)
             entry["found"] = True
             entry["page"] = pn + 1

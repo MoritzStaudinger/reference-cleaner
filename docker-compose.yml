@@ -37,8 +37,11 @@ services:
       test: ["CMD", "curl", "-fsS", "http://localhost:8070/api/isalive"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 60s
+      # GROBID loads 12 Wapiti models + warms up the JVM on first boot.
+      # On a modest VM this can take 3-5 minutes; bump generously so the
+      # dependency check doesn't kill the container mid-startup.
+      retries: 10
+      start_period: 240s
 
   ares:
     build: .

@@ -28,7 +28,7 @@ services:
     # is what ARES uses anyway.  The full `0.8.1` image hangs on first
     # boot waiting for DeLFT/HuggingFace assets on some networks and
     # adds 6+ GB of unused RAM for models we never invoke.
-    image: lfoppiano/grobid:0.8.1-crf
+    image: lfoppiano/grobid:0.9.0-crf
     container_name: ares-grobid
     restart: unless-stopped
     mem_limit: 4g

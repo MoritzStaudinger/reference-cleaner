@@ -80,9 +80,12 @@ services:
       - ares
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      # Institutional cert + key, mounted read-only so a misbehaving
-      # nginx process can't ever touch them.
-      - ./nginx/certs:/etc/nginx/certs:ro
+      # Bind the system cert + key from /etc/ssl/ directly.  Renewals
+      # on the host (overwrite-in-place) propagate after a
+      # `docker compose restart nginx` — no copy step required.
+      # Mounted read-only so a misbehaving nginx process can't touch them.
+      - /etc/ssl/reference-cleaner.pem:/etc/nginx/certs/fullchain.pem:ro
+      - /etc/ssl/key.pem:/etc/nginx/certs/privkey.pem:ro
     ports:
       - "80:80"
       - "443:443"

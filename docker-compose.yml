@@ -24,15 +24,16 @@
 services:
 
   grobid:
-    image: lfoppiano/grobid:0.8.1
+    # CRF-only build — skips DeLFT (deep-learning) initialization, which
+    # is what ARES uses anyway.  The full `0.8.1` image hangs on first
+    # boot waiting for DeLFT/HuggingFace assets on some networks and
+    # adds 6+ GB of unused RAM for models we never invoke.
+    image: lfoppiano/grobid:0.8.1-crf
     container_name: ares-grobid
     restart: unless-stopped
-    # 6 GB JVM heap + native memory (mmapped Wapiti models, JIT cache,
-    # thread stacks) climbs to ~9-10 GB in practice — an 8 GB cap gets
-    # OOM-killed during model loading.
-    mem_limit: 12g
+    mem_limit: 4g
     environment:
-      - JAVA_OPTS=-Xmx6g
+      - JAVA_OPTS=-Xmx2g
     # No host port — only the ares service talks to grobid via the
     # internal `grobid` hostname.  Add `ports: ["8070:8070"]` back if
     # you need host access for debugging.
